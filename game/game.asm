@@ -28,6 +28,8 @@ CHAR_DUST_2_1         = FCM_CHARSET_FIRST_CHAR + 46 + 6
 
 CHAR_SECRET_ENTRANCE  = FCM_CHARSET_FIRST_CHAR + 58
 
+CHAR_WINDUP_COLUMN    = FCM_CHARSET_FIRST_CHAR + 129
+
 SCROLL_FIRST_ROW = 2
 
 GUI_SCORE_OFFSET  = 1
@@ -47,22 +49,31 @@ Game
           lda #CHAR_EMPTY
           jsr ScreenClear32bitAddr
 
-          ;init game vars
+          ;init global gameplay vars
           lda #CHAR_0
           sta STAGE
           lda #CHAR_0 + 1
           sta STAGE + 1
+
           lda #1
           sta LEVEL_NR
           lda #3
           sta PLAYER_LIVES
+          lda #0
+          sta SECRET_SCREEN_ACTIVE
+          sta SECRET_STAGE_LEFT
 
 Respawn
           lda #0
           sta PLAYER_POWERED_UP
+          sta GAME_FREEZE_DELAY
 
 !zone NextLevel
 NextLevel
+          lda #0
+          sta REACHED_EXIT
+          sta PLAYER_SHOT_ACTIVE
+
           jsr ClearAllObjects
           jsr GetReady
 
@@ -114,6 +125,7 @@ NextLevel
           sta SCREEN_CHAR + 80 + ( GUI_TIME_OFFSET + 1 ) * 2
           lda #0
           sta TIME_DELAY
+          sta JUMP_STEPS_LEFT
           lda #99
           sta TIME_VALUE
 
@@ -129,7 +141,6 @@ NextLevel
 
           jsr ScreenOn
           ;fall through
-
 
 !zone GameLoop
 GameLoop
@@ -151,6 +162,7 @@ GameLoop
           sta VIC4.VIC4DIS
 
           lda PLAYER_IS_DEAD
+          ora GAME_FREEZE_DELAY
           bne .NoTimerTick
 
           inc TIME_DELAY
@@ -184,6 +196,21 @@ GameLoop
 
           lda #252
           jsr WaitFrame
+
+          lda GAME_FREEZE_DELAY
+          beq .NoFreeze
+
+          dec GAME_FREEZE_DELAY
+          jmp GameLoop
+
+.NoFreeze
+
+          lda SECRET_STAGE_LEFT
+          beq .NotLeavingSecretStage
+
+          jmp LeaveSecretStage
+
+.NotLeavingSecretStage
 
           lda PLAYER_ENTERED_SECRET
           beq .NoSecret
@@ -817,7 +844,7 @@ AnimateChars
           inc TILE_ANIMATION_DELAY
           lda TILE_ANIMATION_DELAY
           and #$03
-          bne +
+          lbne +
 
           inc TILE_ANIMATION_POS
           lda TILE_ANIMATION_POS
@@ -846,10 +873,10 @@ AnimateChars
 -
 .ReadPos = * + 1
           lda $ffff,x
-          sta TILE_DATA + 79 * 64,x
+          sta TILE_DATA + ( CHAR_STAR_1 - 3 ) * 64,x
 .ReadPos2 = * + 1
           lda $ffff,x
-          sta TILE_DATA + 79 * 64 + 3 * 64,x
+          sta TILE_DATA + ( CHAR_STAR_1 - 3 ) * 64 + 3 * 64,x
 
           inx
           cpx #3 * 64
@@ -866,8 +893,49 @@ AnimateChars
           cpx #2 * 64 + 64
           bne -
 
+          ;windup column
+          ldz #3
+          ldx #0
+--
+          ldy #0
+-
+          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64,x
+          sta .TILE_DATA_TEMP,y
+          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 1 * 8,x
+          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 0 * 8,x
+          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 2 * 8,x
+          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 1 * 8,x
+          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 3 * 8,x
+          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 2 * 8,x
+          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 4 * 8,x
+          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 3 * 8,x
+          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 5 * 8,x
+          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 4 * 8,x
+          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 6 * 8,x
+          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 5 * 8,x
+          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 7 * 8,x
+          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 6 * 8,x
+          lda .TILE_DATA_TEMP,y
+          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 7 * 8,x
+
+          inx
+          iny
+          cpy #8
+          bne -
+
+          txa
+          clc
+          adc #64 - 8
+          tax
+
+          dez
+          bne --
+
 +
           rts
+
+.TILE_DATA_TEMP
+          !fill 8
 
 
 
@@ -961,10 +1029,29 @@ PrepareLevelDataPointer
           ;init first part of level
           lda #40
           sta PARAM6
--
+.NextScroll
           jsr HardScroll
-          dec PARAM6
+
+
+          ;move objects left by 8 pixel
+          ldx #0
+-
+          lda OBJECT_ACTIVE,x
+          beq +
+
+          ldz #8
+--
+          jsr ObjectMoveLeft
+          dez
+          bne --
+
++
+          inx
+          cpx #8
           bne -
+
+          dec PARAM6
+          bne .NextScroll
 
           rts
 
@@ -981,10 +1068,8 @@ EnterSecretScreen
           sta CURRENT_LEVEL_NR
           lda LEVEL_WIDTH
           sta OUTER_LEVEL_CURRENT_WIDTH
-          lda CURRENT_MAP_DATA_POS
-          sta OUTER_LEVEL_DATA_POS
-          lda CURRENT_MAP_DATA_POS + 1
-          sta OUTER_LEVEL_DATA_POS + 1
+          lda LEVEL_WIDTH + 1
+          sta OUTER_LEVEL_CURRENT_WIDTH + 1
 
           lda LOCAL1
           jsr PrepareLevelDataPointer
@@ -1006,6 +1091,100 @@ EnterSecretScreen
           sta SCROLL_SLOWDOWN_DELAY
           sta SCROLL_SPEEDUP_DELAY
           sta PLAYER_ENTERED_SECRET
+          sta SECRET_STAGE_LEFT
+
+          lda #1
+          sta SECRET_SCREEN_ACTIVE
+
+          jmp GameLoop
+
+
+
+!zone LeaveSecretStage
+LeaveSecretStage
+          jsr ScreenOff
+
+          lda CURRENT_LEVEL_NR
+          sta LEVEL_NR
+          jsr PrepareLevelDataPointer
+
+-
+          jsr HardScroll
+
+          lda LEVEL_WIDTH
+          sec
+          sbc #1
+          sta LEVEL_WIDTH
+          lda LEVEL_WIDTH + 1
+          sbc #0
+          sta LEVEL_WIDTH + 1
+
+          lda OUTER_LEVEL_CURRENT_WIDTH
+          cmp LEVEL_WIDTH
+          bne -
+
+          lda OUTER_LEVEL_CURRENT_WIDTH + 1
+          cmp LEVEL_WIDTH + 1
+          bne -
+
+          ;replace secret stage entry with bridge
+          lda SCREEN_LINE_OFFSET_LO + 24
+          sta ZEROPAGE_POINTER_1
+          lda SCREEN_LINE_OFFSET_HI + 24
+          sta ZEROPAGE_POINTER_1 + 1
+
+          ldy #0
+-
+          lda (ZEROPAGE_POINTER_1),y
+          cmp #CHAR_SECRET_ENTRANCE
+          bne +
+
+          lda #CHAR_BRIDGE_1
+          sta (ZEROPAGE_POINTER_1),y
+
++
+          iny
+          iny
+          cpy #39 * 2
+          bne -
+
+          jsr ClearAllObjects
+
+
+          lda CURRENT_PLAYER_X_POS
+          sta PARAM1
+          lda #20
+          sta PARAM2
+          lda #TYPE_PLAYER
+          sta PARAM3
+          ldx #0
+          jsr SpawnObjectInSlot
+
+          lda #0
+          sta OBJECT_ANIM_DELAY
+          sta OBJECT_ANIM_POS
+          lda #1
+          sta OBJECT_JUMP_POS
+          lda #OF_JUMPING
+          sta OBJECT_FLAGS
+
+          lda #20
+          sta JUMP_STEPS_LEFT
+
+
+          lda #0
+          sta REACHED_EXIT
+          sta PLAYER_IS_DEAD
+          sta SCROLL_SPEED
+          sta SCROLL_SPEED_POS
+          sta SCROLL_SLOWDOWN_DELAY
+          sta SCROLL_SPEEDUP_DELAY
+          sta PLAYER_ENTERED_SECRET
+          sta SECRET_STAGE_LEFT
+          sta SECRET_SCREEN_ACTIVE
+          sta PLAYER_ON_ELEVATOR
+
+          jsr ScreenOn
 
           jmp GameLoop
 
@@ -1099,6 +1278,9 @@ TIME_DELAY
 REACHED_EXIT
           !byte 0
 
+SECRET_STAGE_LEFT
+          !byte 0
+
 TIME_VALUE
           !byte 0
 
@@ -1118,6 +1300,9 @@ PLAYER_LIVES
           !byte 0
 
 PLAYER_ON_ELEVATOR
+          !byte 0
+
+PLAYER_SHOT_ACTIVE
           !byte 0
 
 LEVEL_NR
@@ -1149,13 +1334,14 @@ DUST_X
 DUST_Y
           !fill NUM_DUST_ENTRIES
 
+GAME_FREEZE_DELAY
+          !byte 0
+
 CURRENT_PLAYER_X_POS
           !byte 0
 CURRENT_LEVEL_NR
           !byte 0
 OUTER_LEVEL_CURRENT_WIDTH
-          !byte 0
-OUTER_LEVEL_DATA_POS
           !word 0
 
 ;map from level no to bonus map

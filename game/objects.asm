@@ -16,10 +16,18 @@ SPRITE_PLAYER_FALL_L    = SPRITE_BASE + 8 * 4
 SPRITE_GOOMBA_1         = SPRITE_BASE + 10 * 4
 SPRITE_GOOMBA_FLAT      = SPRITE_BASE + 12 * 4
 SPRITE_EXTRA            = SPRITE_BASE + 13 * 4
-SPRITE_DIAMOND          = SPRITE_BASE + 14 * 4
+SPRITE_DIAMOND          = SPRITE_BASE + 16 * 4
 SPRITE_ELEVATOR_1       = SPRITE_BASE + 27 * 4
 
 SPRITE_PLAYER_RUN_R_1_EX = SPRITE_BASE + 17 * 4
+
+SPRITE_CRAB_R           = SPRITE_BASE + 30 * 4
+SPRITE_CRAB_L           = SPRITE_BASE + 32 * 4
+SPRITE_CRAB_FLAT        = SPRITE_BASE + 34 * 4
+
+SPRITE_EXTRA_FLASH      = SPRITE_BASE + 35 * 4
+
+SPRITE_PLAYER_SHOT      = SPRITE_BASE + 37 * 4
 
 OBJECT_HEIGHT           = 8 * 2
 
@@ -31,10 +39,17 @@ TYPE_FLAT         = 4
 TYPE_EXTRA        = 5
 TYPE_DIAMOND      = 6
 TYPE_ELEVATOR_UP  = 7
+TYPE_CRAB         = 8
+TYPE_PLAYER_SHOT  = 9
 
-EXTRA_POWERUP     = 0
-EXTRA_SHOT        = 1
-EXTRA_AIMING_SHOT = 2
+EXTRA_POWERUP       = 0
+EXTRA_SHOT          = 1
+EXTRA_BOUNCING_SHOT = 2
+EXTRA_AIMING_SHOT   = 3
+EXTRA_CLOCK         = 4
+EXTRA_MAGIC_BOMB    = 5
+EXTRA_WATER_DROP    = 6
+EXTRA_LOLLIPOP      = 7
 
 ;offset from calculated char pos to true sprite pos
 SPRITE_CENTER_OFFSET_X  = 8
@@ -127,6 +142,7 @@ SpawnObjectInSlot
           sta OBJECT_MOVE_SPEED_Y,x
           sta OBJECT_STATE,x
           sta OBJECT_DIR,x
+          sta OBJECT_DIR_Y,x
           sta OBJECT_POS_X_EX,x
           sta OBJECT_VALUE,x
 
@@ -193,16 +209,6 @@ SpawnObjectInSlot
           ;force 0 to be transparent
           lda #0
           sta VIC.SPRITE_COLOR,x
-
-;+
-
-          ;txa
-          ;asl
-          ;tay
-          ;lda OBJECT_POS_X,x
-          ;sta VIC.SPRITE_X_POS,y
-          ;lda OBJECT_POS_Y,x
-          ;sta VIC.SPRITE_Y_POS,y
 
           rts
 
@@ -285,7 +291,7 @@ ObjectControl
           cpx #NUM_OBJECT_SLOTS
           bne .Loop
 
-          jsr CheckCollisions
+          jsr CheckCollisionsForPlayer
           rts
 
 
@@ -394,6 +400,36 @@ BHPlayer
           rts
 
 .NotOnElevator
+          lda #JOY_FIRE
+          bit JOY_VALUE
+          bne .NotFire
+
+          lda PLAYER_POWERED_UP
+          cmp #EXTRA_SHOT + 1
+          bcc .NotFire
+
+          lda PLAYER_SHOT_ACTIVE
+          bne .NotFire
+
+          lda OBJECT_CHAR_POS_X
+          sta PARAM1
+          lda OBJECT_CHAR_POS_Y
+          dec
+          sta PARAM2
+          lda #TYPE_PLAYER_SHOT
+          sta PARAM3
+          jsr SpawnObject
+
+          lda OBJECT_DIR
+          sta OBJECT_DIR,x
+
+          lda #1
+          sta PLAYER_SHOT_ACTIVE
+
+          ldx CURRENT_INDEX
+
+
+.NotFire
           lda #JOY_RIGHT
           bit JOY_VALUE
           bne .NotRight
@@ -550,6 +586,12 @@ PLAYER_SPRITES_FALL
           and #!OF_ON_GROUND
           sta OBJECT_FLAGS,x
 
+          ldy #SFX_JUMP
+          jsr PlaySoundEffect
+
+          ldx CURRENT_INDEX
+
+
 +
 
           ;still has jump flags set?
@@ -607,6 +649,83 @@ BHNone
 
 
 
+!zone BHPlayerShot
+BHPlayerShot
+          jsr .HandleShot
+
+.HandleShot
+
+          ldy CURRENT_INDEX
+          jsr CheckCollisions
+
+          lda #3
+          sta PARAM2
+
+--
+          lda OBJECT_DIR,x
+          beq .GoLeft
+
+          jsr ObjectMoveLeftBlocking
+          beq .BlockedX
+
+          jmp .Moved
+
+.BlockedX
+          lda OBJECT_DIR,x
+          eor #$01
+          sta OBJECT_DIR,x
+          jmp .Moved
+
+.GoLeft
+          jsr ObjectMoveRightBlocking
+          beq .BlockedX
+.Moved
+          dec PARAM2
+          bne --
+
+          lda OBJECT_DIR_Y,x
+          bne .GoDown
+
+          jsr ObjectMoveDownBlocking
+          beq .Blocked
+          jmp .MovedY
+
+.GoDown
+          jsr ObjectMoveUpBlocking
+          beq .Blocked
+          jmp .MovedY
+
+.Blocked
+          lda OBJECT_DIR_Y,x
+          eor #$01
+          sta OBJECT_DIR_Y,x
+
+.MovedY
+          lda OBJECT_CHAR_POS_X,x
+          beq .RemoveShot
+          cmp #38
+          beq .RemoveShot
+
+          lda OBJECT_CHAR_POS_Y,x
+          bmi .RemoveShot
+          cmp #25
+          beq .RemoveShot
+
+          rts
+
+.RemoveShot
+          lda #0
+          sta PLAYER_SHOT_ACTIVE
+          jmp RemoveObject
+
+
+
+!zone BHFlat
+BHFlat
+          jmp HandleObjectFall
+
+
+
 !zone BHGoomba
 BHGoomba
           jsr HandleObjectFall
@@ -634,6 +753,41 @@ BHGoomba
           ora #SPRITE_GOOMBA_1
           sta OBJECT_SPRITE,x
           rts
+
+
+
+!zone BHCrab
+BHCrab
+          jsr HandleObjectFall
+
+          lda OBJECT_DIR,x
+          beq .GoLeft
+
+          jsr ObjectMoveRightBlocking
+          beq .Blocked
+          jmp .Update
+
+.GoLeft
+          jsr ObjectMoveLeftBlocking
+          bne .Update
+
+.Blocked
+          lda OBJECT_DIR,x
+          eor #$01
+          sta OBJECT_DIR,x
+
+.Update
+          ldy OBJECT_DIR,x
+          inc OBJECT_ANIM_DELAY,x
+          lda OBJECT_ANIM_DELAY,x
+          and #$04
+          clc
+          adc CRAB_SPRITE,y
+          sta OBJECT_SPRITE,x
+          rts
+
+CRAB_SPRITE
+          !byte SPRITE_CRAB_L, SPRITE_CRAB_R
 
 
 
@@ -665,13 +819,26 @@ BHExtra
           sta OBJECT_DIR,x
 
 .Update
+          lda OBJECT_VALUE,x
+          cmp #EXTRA_POWERUP
+          bne .NoAnim
+
           inc OBJECT_ANIM_DELAY,x
           lda OBJECT_ANIM_DELAY,x
           lsr
           lsr
-          and #$01
-          ora #SPRITE_EXTRA
-          ;sta OBJECT_SPRITE,x
+          cmp #$3
+          bne +
+
+          lda #0
+          sta OBJECT_ANIM_DELAY,x
++
+          asl
+          asl
+          clc
+          adc #SPRITE_EXTRA
+          sta OBJECT_SPRITE,x
+.NoAnim
           rts
 
 
@@ -700,16 +867,42 @@ BHElevator
         beq .MoveUp
 
         jsr ObjectMoveDown
+        jsr ObjectMoveDown
         ldx #0
+        jsr ObjectMoveDown
         jsr ObjectMoveDown
         ldx CURRENT_INDEX
         rts
 
 .MoveUp
         jsr ObjectMoveUp
+        jsr ObjectMoveUp
+
         ldx #0
         jsr ObjectMoveUp
+        jsr ObjectMoveUp
         ldx CURRENT_INDEX
+
+        lda OBJECT_POS_Y,x
+        cmp #20
+        bcc .OutsideTop
+
+        rts
+
+.OutsideTop
+        lda SECRET_SCREEN_ACTIVE
+        beq .StageCompleted
+
+        lda #1
+        sta SECRET_STAGE_LEFT
+
+        ldx #7
+        stx CURRENT_INDEX
+        rts
+
+.StageCompleted
+        lda #1
+        sta REACHED_EXIT
         rts
 
 .WaitingForPlayer
@@ -761,7 +954,7 @@ BHElevator
 ;return a = 1 when colliding, a = 0 when not
 ;------------------------------------------------------------
 
-!zone IsEnemyCollidingWithPlayer
+!zone IsEnemyCollidingWithObject
 
 ;x = enemy index
 .CalculateSimpleXPos
@@ -782,7 +975,7 @@ BHElevator
           lsr
           rts
 
-IsEnemyCollidingWithPlayer
+IsEnemyCollidingWithObject
           ;modifies X
           ;check y pos
           lda OBJECT_POS_Y,x
@@ -824,7 +1017,7 @@ IsEnemyCollidingWithPlayer
 ;check enemy collision with player
 ;x = player index
 !zone CheckCollisions
-CheckCollisions
+CheckCollisionsForPlayer
           ;only collide when player is alive
           lda OBJECT_ACTIVE
           cmp #TYPE_PLAYER
@@ -839,6 +1032,10 @@ CheckCollisions
 +
 
           ldy #0
+
+
+;y = object to check
+CheckCollisions
           sty CURRENT_INDEX
 
           ldx #1
@@ -870,7 +1067,7 @@ CheckCollisions
           beq .NextObject
 
           ldy CURRENT_INDEX
-          jsr IsEnemyCollidingWithPlayer
+          jsr IsEnemyCollidingWithObject
           bne .PlayerCollidedWithEnemy
 
           jmp .NextObject
@@ -882,6 +1079,52 @@ CheckCollisions
           ldx CURRENT_INDEX
           ldy CURRENT_SUB_INDEX
 
+          cpx #0
+          beq .IsPlayer
+
+          ;other object
+          lda OBJECT_ACTIVE,x
+          cmp #TYPE_PLAYER_SHOT
+          beq .IsPlayerShot
+
+          jmp .NextObject
+
+
+.IsPlayerShot
+          lda OBJECT_ACTIVE,y
+          tay
+          lda TYPE_ENEMY_TYPE,y
+          beq .NextObject
+          cmp #1
+          beq .KillEnemyWithShot
+          cmp #2
+          beq .KillEnemyWithShot
+
+          jmp .NextObject
+
+.KillEnemyWithShot
+          lda #0
+          sta PLAYER_SHOT_ACTIVE
+
+          ;remove shot
+          jsr RemoveObject
+
+          ;remove enemy TODO - flatten flattenable enemies
+          ldx CURRENT_SUB_INDEX
+          ldy OBJECT_ACTIVE,x
+          lda TYPE_ENEMY_TYPE,y
+          cmp #1
+          bne .KillEnemy
+
+          jmp FlattenEnemy
+
+.KillEnemy
+          ldx CURRENT_SUB_INDEX
+          jmp RemoveObject
+
+
+
+.IsPlayer
           lda OBJECT_ACTIVE,y
           tay
           lda TYPE_ENEMY_TYPE,y
@@ -899,14 +1142,7 @@ CheckCollisions
 ++
           ;jumped on enemy
           ldx CURRENT_SUB_INDEX
-          lda FLATTENED_ENEMY_SPRITE,y
-          sta OBJECT_SPRITE,x
-          lda #TYPE_FLAT
-          sta OBJECT_ACTIVE,x
-
-          lda OBJECT_FLAGS,x
-          and #~OF_ON_GROUND
-          sta OBJECT_FLAGS,x
+          jsr FlattenEnemy
 
           ldx CURRENT_INDEX
 
@@ -932,18 +1168,50 @@ CheckCollisions
 .Pickup
           ldx CURRENT_SUB_INDEX
           lda OBJECT_VALUE,x
-          cmp #EXTRA_POWERUP
+          inc
+          sta PLAYER_POWERED_UP
+          cmp #1
           bne +
 
-          lda #1
-          sta PLAYER_POWERED_UP
-
+          ;first power up has freeze delay
+          lda #50
+          sta GAME_FREEZE_DELAY
 
 +
+
+          ldy #SFX_POWER_UP
+          jsr PlaySoundEffect
+
           ldx CURRENT_SUB_INDEX
           jsr RemoveObject
           ldx CURRENT_INDEX
           jmp .NextObject
+
+
+
+!zone FlattenEnemy
+;x = enemy index
+FlattenEnemy
+          ldy OBJECT_ACTIVE,x
+          lda FLATTENED_ENEMY_SPRITE,y
+          sta OBJECT_SPRITE,x
+          lda #TYPE_FLAT
+          sta OBJECT_ACTIVE,x
+
+          lda OBJECT_FLAGS,x
+          and #~OF_ON_GROUND
+          sta OBJECT_FLAGS,x
+
+          phx
+          phy
+
+          ldy #SFX_FLATTEN_ENEMY
+          jsr PlaySoundEffect
+
+          ply
+          plx
+
+          rts
 
 
 
@@ -1143,6 +1411,10 @@ PickedDiamond
           sta ZEROPAGE_POINTER_5 + 1
 
           jsr IncreaseValue
+
+          ldy #SFX_PICK_DIAMOND
+          lda #0
+          jsr PlaySoundEffect
 
           ldx LOCAL1
           rts
@@ -1423,6 +1695,12 @@ HitBrickBlock
 
 .NoDiamond
 .NotHitRight
+
+
+          ldy #SFX_BRICK_BREAK
+          lda #0
+          jsr PlaySoundEffect
+
           ply
           ldx CURRENT_INDEX
 
@@ -1450,13 +1728,21 @@ SpawnExtra
           ldx #1
           jsr SpawnObjectStartingWithSlot
 
-          lda #EXTRA_POWERUP
+          ;player powered up state matches next power up
+          lda PLAYER_POWERED_UP
           sta OBJECT_VALUE,x
+
+          tay
+          lda POWER_UP_SPRITE,y
+          sta OBJECT_SPRITE,x
 
           lda #10
           sta OBJECT_JUMP_POS,x
           lda #OF_JUMPING | OF_NON_BLOCKING
           sta OBJECT_FLAGS,x
+
+          ldy #SFX_DISK_PUSH
+          jsr PlaySoundEffect
 
           rts
 
@@ -2124,6 +2410,8 @@ TYPE_START_SPRITE = * - 1
           !byte SPRITE_EXTRA
           !byte SPRITE_DIAMOND
           !byte SPRITE_ELEVATOR_1
+          !byte SPRITE_CRAB_L
+          !byte SPRITE_PLAYER_SHOT
 
 TYPE_START_COLOR = * - 1
           !byte $0a   ;player
@@ -2133,6 +2421,8 @@ TYPE_START_COLOR = * - 1
           !byte $01   ;extra
           !byte $01   ;diamond
           !byte $01   ;elevator up
+          !byte $01   ;crab
+          !byte $01   ;player shot
 
 
 ;0 = player
@@ -2150,24 +2440,30 @@ TYPE_ENEMY_TYPE = * - 1
           !byte 3     ;extra
           !byte 0     ;diamond
           !byte 4     ;elevator up
+          !byte 1     ;crab
+          !byte 0     ;player shot
 
 TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHPlayer
           !byte <BHGoomba
           !byte <BHPlayerDying
-          !byte <BHNone
+          !byte <BHFlat
           !byte <BHExtra
           !byte <BHDiamond
           !byte <BHElevator
+          !byte <BHCrab
+          !byte <BHPlayerShot
 
 TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHPlayer
           !byte >BHGoomba
           !byte >BHPlayerDying
-          !byte >BHNone
+          !byte >BHFlat
           !byte >BHExtra
           !byte >BHDiamond
           !byte >BHElevator
+          !byte >BHCrab
+          !byte >BHPlayerShot
 
 TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;player
@@ -2177,6 +2473,8 @@ TYPE_START_SPRITE_FLAGS = * - 1
           !byte SF_DIR_R | SF_START_PRIO  ;extra
           !byte 0         ;diamond
           !byte 0         ;elevator
+          !byte 0         ;crab
+          !byte 0         ;player shot
 
 
 TYPE_SPAWN_DELTA_X = * - 1
@@ -2187,6 +2485,8 @@ TYPE_SPAWN_DELTA_X = * - 1
           !byte 0         ;extra
           !byte 0         ;diamond
           !byte 0         ;elevator
+          !byte 0         ;crab
+          !byte 0         ;player shot
 
 ;offset added onto Y
 TYPE_SPAWN_DELTA_Y = * - 1
@@ -2197,6 +2497,8 @@ TYPE_SPAWN_DELTA_Y = * - 1
           !byte 0         ;extra
           !byte 0         ;diamond
           !byte 3         ;elevator
+          !byte 0         ;crab
+          !byte 0         ;player shot
 
 FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0   ;player
@@ -2206,6 +2508,8 @@ FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0         ;extra
           !byte 0         ;diamond
           !byte 0         ;elevator
+          !byte SPRITE_CRAB_FLAT
+          !byte 0         ;player shot
 
 JUMP_TABLE
           !byte 6,6,5,5,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,2,2,1,1,1,0
@@ -2243,6 +2547,9 @@ OBJECT_ANIM_POS
 ;$00 = left, $01 = right
 OBJECT_DIR
           !fill NUM_OBJECT_SLOTS,0
+;$00 = down, $01 = up
+OBJECT_DIR_Y
+          !fill NUM_OBJECT_SLOTS,0
 OBJECT_FLAGS
           !fill NUM_OBJECT_SLOTS,0
 OBJECT_STATE
@@ -2279,10 +2586,26 @@ SCREEN_LINE_OFFSET_HI
 !end
 
 
+;0 = no powerup
+;1 = headbutt
+;2 = shot
+;3 = bouncing shot
+;4 = homing shot
+;5 = clock
+;6 = magic bomb
+;7 = water drop
+;8 = lollipop
 PLAYER_POWERED_UP
           !byte 0
 
+POWER_UP_SPRITE
+          !byte SPRITE_EXTRA
+          !byte SPRITE_EXTRA_FLASH
+
 PLAYER_ENTERED_SECRET
+          !byte 0
+
+SECRET_SCREEN_ACTIVE
           !byte 0
 
 

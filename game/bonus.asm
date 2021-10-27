@@ -1,4 +1,4 @@
-BONUS_SCORE_OFFSET = 26
+﻿BONUS_SCORE_OFFSET = 26
 BONUS_TIME_OFFSET = 9
 
 !zone BonusMode
@@ -131,6 +131,9 @@ BonusLoop
 !zone BonusTick
 BonusTick
           dec TIME_VALUE
+
+          ldy #SFX_BONUS_BLIP
+          jsr PlaySoundEffect
 
           ldx #4
           lda #<( SCREEN_CHAR + 13 * 80 + 2 * BONUS_SCORE_OFFSET )

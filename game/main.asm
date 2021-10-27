@@ -9,7 +9,8 @@ BORDER_WIDTH = $58    ;38 column border width
 SCREEN_CHAR = $0800
 SCREEN_COLOR = $d800
 
-NUM_SPRITES = 30
+NUM_SPRITES = 38
+NUM_CHARS   = 245
 
 PARAM1    = $67
 PARAM2    = $68
@@ -47,10 +48,11 @@ LDF_PREV_ELEMENT_AREA = $e0   ;y repeat MSB means previous element
 
 SPRITE_POINTER_BASE   = $ff0
 
-
 * = $2001
-          !basic
 
+!ifndef DISK {
+          !basic
+}
           sei
 
           +EnableVIC4Registers
@@ -75,21 +77,13 @@ SPRITE_POINTER_BASE   = $ff0
           lda #$f8
           trb VIC3.ROMBANK
 
+
           lda #$35
           sta PROCESSOR_PORT
 
           cli
 
-          ;;set chargen to GUI charset
-;          lda #<GUI_CHARSET
-;          sta VIC4.CHARPTR
-;          lda #>GUI_CHARSET
-;          sta VIC4.CHARPTR + 1
-;          lda #0
-;          sta VIC4.CHARPTR + 2
-;
-;          jmp *
-
+          jsr InitIrq
 
           ;set 40x25 mode
           lda #$80
@@ -194,28 +188,26 @@ SetPalette
 !source "game.asm"
 !source "util.asm"
 !source "bonus.asm"
-!source "getready.asm"
 !source "debugout.asm"
 !source "stages.asm"
 !source "objects.asm"
 !source "gameover.asm"
 !source "title.asm"
+!source "sfxplay.asm"
 
+
+* = $4000 "Charset"
+TILE_DATA
+          !media "game.charsetproject",CHAR,0,NUM_CHARS
 
 PALETTE_DATA
-          !media "tiles.charscreen",PALETTESWIZZLED,0,32
+          !media "game.charsetproject",PALETTESWIZZLED,0,32
 
-* = $4000
-TILE_DATA
-          !media "tiles.charscreen",CHARSET,0,244
-
-;GUI_CHARSET
-;          !media "gui.charscreen",CHARSET,0,64
+!source "getready.asm"
 
 * = $8000
-;!realign 64
 SPRITE_DATA
-          !media "megasisters.spriteproject",SPRITE,0,NUM_SPRITES
+          !media "megasisters.spriteproject",SPRITEOPTIMIZE,0,NUM_SPRITES
 
 
 ANIMATED_TILE_DATA
@@ -224,3 +216,4 @@ ANIMATED_TILE_DATA
 GUI_BAR
           !media "gui.charscreen",CHAR
 
+!source "irq.asm"

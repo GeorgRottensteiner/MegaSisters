@@ -43,9 +43,9 @@ Debug
           sta PARAM3
           jsr DisplayHex
 
-          lda #<OBJECT_POS_Y
+          lda #<EFFECT_TYPE
           sta ZEROPAGE_POINTER_1
-          lda #>OBJECT_POS_Y
+          lda #>EFFECT_TYPE
           sta ZEROPAGE_POINTER_1 + 1
 
           lda #<( SCREEN_CHAR + 40 )
@@ -57,6 +57,7 @@ Debug
           sta PARAM3
           jsr DisplayHex
 
+!if 0{
           lda #<OBJECT_FLAGS
           sta ZEROPAGE_POINTER_1
           lda #>OBJECT_FLAGS
@@ -84,7 +85,7 @@ Debug
           lda #2
           sta PARAM3
           jsr DisplayHex
-
+}
           jmp *
 
 
