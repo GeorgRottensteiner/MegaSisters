@@ -67,7 +67,7 @@ ScreenClear32bitAddr
 
           ;hi byte
           ;force chars to $100!
-          lda #$01
+          lda #$04 ; TILE_DATA / 64 ; $01
           sta [ZP.Screen], z
           lda #0
           sta [ZP.Color], z
@@ -93,7 +93,7 @@ ScreenClear32bitAddr
 
           ;hi byte
           ;force chars to $100!
-          lda #$01
+          lda #$04 ; $01
           sta [ZP.Screen], z
           lda #0
           sta [ZP.Color], z

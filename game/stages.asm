@@ -18,11 +18,15 @@ EL__BRICK_DIAMOND = 16
 EL__GROUND.BRICK = 17
 EL__SECRET = 18
 EL__COLUMN = 19
+EL__UNDERGROUNDBRICK = 20
+EL__WATER.TOP = 21
+EL__WATER = 22
+EL__VINES = 23
 
 ELEMENT_WIDTH_TABLE
-!byte 3,4,3,6,2,2,3,2,2,2,2,3,5,6,6,4,3,2,2,3
+!byte 3,4,3,6,2,2,3,2,2,2,2,3,5,6,6,4,3,2,2,3,2,2,2,2
 ELEMENT_HEIGHT_TABLE
-!byte 2,3,2,3,2,2,2,1,3,3,2,2,1,2,3,3,2,2,1,1
+!byte 2,3,2,3,2,2,2,1,3,3,2,2,1,2,3,3,2,2,1,1,2,1,2,2
 ELEMENT_TABLE_LO
 !byte <( DATA_EL__BRICK )
 !byte <( DATA_EL__GROUND.C )
@@ -44,6 +48,10 @@ ELEMENT_TABLE_LO
 !byte <( DATA_EL__GROUND.BRICK )
 !byte <( DATA_EL__SECRET )
 !byte <( DATA_EL__COLUMN )
+!byte <( DATA_EL__UNDERGROUNDBRICK )
+!byte <( DATA_EL__WATER.TOP )
+!byte <( DATA_EL__WATER )
+!byte <( DATA_EL__VINES )
 
 ELEMENT_TABLE_HI
 !byte >( DATA_EL__BRICK )
@@ -66,6 +74,10 @@ ELEMENT_TABLE_HI
 !byte >( DATA_EL__GROUND.BRICK )
 !byte >( DATA_EL__SECRET )
 !byte >( DATA_EL__COLUMN )
+!byte >( DATA_EL__UNDERGROUNDBRICK )
+!byte >( DATA_EL__WATER.TOP )
+!byte >( DATA_EL__WATER )
+!byte >( DATA_EL__VINES )
 
 DATA_EL__BRICK
 !byte 60,63,61,64,62,65
@@ -107,6 +119,14 @@ DATA_EL__SECRET
 !byte 58,58
 DATA_EL__COLUMN
 !byte 129,130,131
+DATA_EL__UNDERGROUNDBRICK
+!byte 132,133,133,132
+DATA_EL__WATER.TOP
+!byte 192,193
+DATA_EL__WATER
+!byte 194,194,194,194
+DATA_EL__VINES
+!byte 134,136,135,137
 
 
 _SCREEN_DATA_TABLE
@@ -114,16 +134,19 @@ _SCREEN_DATA_TABLE
           !word _LEVEL_2
           !word _LEVEL_3
           !word _LEVEL_4
+          !word _LEVEL_5
           !word 0
 
 
-_LEVEL_1
+_LEVEL_1 ;Title
           !word 290
           !byte 0
           !byte LDF_ELEMENT_LINE + 22,28,EL__GROUND.C
           !byte LDF_X_POS + 15; 15
           !byte LDF_ELEMENT_LINE + 19,1,EL__MUSHROOM
-          !byte LDF_X_POS + 24; 39
+          !byte LDF_X_POS + 11; 26
+          !byte LDF_ELEMENT_AREA + 7,1,10,EL__COLUMN
+          !byte LDF_X_POS + 13; 39
           !byte LDF_ELEMENT_LINE + 5,3,EL__BRICK
           !byte LDF_X_POS + 3; 42
           !byte LDF_ELEMENT_AREA + 7,1,10,EL__COLUMN
@@ -310,7 +333,7 @@ _LEVEL_1
           !byte LD_END
 
 
-_LEVEL_2
+_LEVEL_2 ;Stage 1
           !word 290
           !byte 0
           !byte LDF_ELEMENT_LINE + 22,28,EL__GROUND.C
@@ -322,7 +345,9 @@ _LEVEL_2
           !byte LDF_ELEMENT_LINE + 16,1,EL__BRICK_DIAMOND
           !byte LDF_X_POS + 9; 42
           !byte LDF_ELEMENT_LINE + 16,1,EL__BRICK
-          !byte LDF_X_POS + 3; 45
+          !byte LDF_X_POS + 1; 43
+          !byte LD_OBJECT | 1, 21
+          !byte LDF_X_POS + 2; 45
           !byte LDF_PREV_ELEMENT_LINE + 9,1
           !byte LDF_ELEMENT_LINE + 16,1,EL__STAR
           !byte LDF_X_POS + 3; 48
@@ -444,7 +469,7 @@ _LEVEL_2
           !byte LD_END
 
 
-_LEVEL_3
+_LEVEL_3 ;Stage 2
           !word 239
           !byte 1
           !byte LDF_ELEMENT_AREA + 21,69,2,EL__GROUND.BRICK
@@ -453,8 +478,9 @@ _LEVEL_3
           !byte LDF_PREV_ELEMENT_LINE + 3,44
           !byte LDF_X_POS + 20; 27
           !byte LDF_PREV_ELEMENT_LINE + 10,3
+          !byte LDF_ELEMENT_LINE + 9,5,EL__WATER.TOP
           !byte LDF_X_POS + 6; 33
-          !byte LDF_PREV_ELEMENT_AREA + 12, 1,130
+          !byte LDF_ELEMENT_AREA + 12, 1,2,EL__BRICK
           !byte LDF_X_POS + 3; 36
           !byte LDF_PREV_ELEMENT_LINE + 14,4
           !byte LDF_X_POS + 1; 37
@@ -515,7 +541,44 @@ _LEVEL_3
           !byte LD_END
 
 
-_LEVEL_4
+_LEVEL_4 ;Stage 3
+          !word 240
+          !byte 0
+          !byte LDF_ELEMENT_LINE + 2,69,EL__UNDERGROUNDBRICK
+          !byte LDF_PREV_ELEMENT_AREA + 9,3,136
+          !byte LDF_X_POS + 6; 6
+          !byte LDF_PREV_ELEMENT_AREA + 11, 1,135
+          !byte LDF_X_POS + 2; 8
+          !byte LDF_PREV_ELEMENT_AREA + 13, 1,134
+          !byte LDF_X_POS + 2; 10
+          !byte LDF_PREV_ELEMENT_AREA + 15, 1,133
+          !byte LDF_X_POS + 2; 12
+          !byte LDF_PREV_ELEMENT_AREA + 17,3,132
+          !byte LDF_X_POS + 6; 18
+          !byte LDF_ELEMENT_LINE + 24,5,EL__WATER.TOP
+          !byte LDF_X_POS + 10; 28
+          !byte LDF_ELEMENT_AREA + 17,3,4,EL__UNDERGROUNDBRICK
+          !byte LDF_X_POS + 6; 34
+          !byte LDF_ELEMENT_LINE + 24,5,EL__WATER.TOP
+          !byte LDF_X_POS + 10; 44
+          !byte LDF_ELEMENT_AREA + 17,3,4,EL__UNDERGROUNDBRICK
+          !byte LDF_X_POS + 6; 50
+          !byte LDF_ELEMENT_LINE + 24,11,EL__WATER.TOP
+          !byte LDF_X_POS + 8; 58
+          !byte LDF_ELEMENT_LINE + 17,3,EL__UNDERGROUNDBRICK
+          !byte LDF_ELEMENT + 9,EL__STAREXTRA
+          !byte LDF_X_POS + 3; 61
+          !byte LDF_ELEMENT + 9,EL__STAR
+          !byte LDF_X_POS + 11; 72
+          !byte LDF_ELEMENT_AREA + 17,15,4,EL__UNDERGROUNDBRICK
+          !byte LDF_X_POS + 6; 78
+          !byte LDF_PREV_ELEMENT_AREA + 4,12,132
+          !byte LDF_X_POS + 24; 102
+          !byte LDF_PREV_ELEMENT_AREA + 21,15,130
+          !byte LD_END
+
+
+_LEVEL_5 ;Bonus #1
           !word 40
           !byte 0
           !byte LDF_ELEMENT_AREA + 2, 1,11,EL__BRICK

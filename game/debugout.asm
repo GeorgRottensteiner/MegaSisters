@@ -43,9 +43,9 @@ Debug
           sta PARAM3
           jsr DisplayHex
 
-          lda #<EFFECT_TYPE
+          lda #<OBJECT_ACTIVE
           sta ZEROPAGE_POINTER_1
-          lda #>EFFECT_TYPE
+          lda #>OBJECT_ACTIVE
           sta ZEROPAGE_POINTER_1 + 1
 
           lda #<( SCREEN_CHAR + 40 )

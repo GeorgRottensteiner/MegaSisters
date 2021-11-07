@@ -3,7 +3,6 @@
 !source <c64.asm>
 !source <mega65.asm>
 
-
 BORDER_WIDTH = $58    ;38 column border width
 
 SCREEN_CHAR = $0800
@@ -32,6 +31,9 @@ ZEROPAGE_POINTER_3 = $70
 ZEROPAGE_POINTER_4 = $C1
 ZEROPAGE_POINTER_5 = $C3
 
+ZEROPAGE_POINTER_QUAD_1   = $c5
+ZEROPAGE_POINTER_QUAD_2   = $c9
+
 ;ttt y yyyy
 ;T = Type, y = y pos
 LDF_X_POS             = $00
@@ -48,11 +50,26 @@ LDF_PREV_ELEMENT_AREA = $e0   ;y repeat MSB means previous element
 
 SPRITE_POINTER_BASE   = $ff0
 
-* = $2001
+!ifdef DISK {
+SPRITE_LOCATION = $18000
+} else {
+SPRITE_LOCATION = SPRITE_DATA ;$e000
+}
+
 
 !ifndef DISK {
+          * = $2001
+
           !basic
+} else {
+
+!to "main.prg",plain
+* = $2040
 }
+
+ENTRY_POINT
+
+;!ifndef DISK {
           sei
 
           +EnableVIC4Registers
@@ -77,7 +94,7 @@ SPRITE_POINTER_BASE   = $ff0
           lda #$f8
           trb VIC3.ROMBANK
 
-
+;}
           lda #$35
           sta PROCESSOR_PORT
 
@@ -110,8 +127,8 @@ SPRITE_POINTER_BASE   = $ff0
           lda #$80
           sta VIC4.SPRPTR16
 
-          ;set all hi bytes to bank 3
-          lda #$02
+          ;set all hi bytes
+          lda #( SPRITE_LOCATION / 16384 )
           sta SPRITE_POINTER_BASE + 1
           sta SPRITE_POINTER_BASE + 3
           sta SPRITE_POINTER_BASE + 5
@@ -127,6 +144,7 @@ SPRITE_POINTER_BASE   = $ff0
 
 
 
+
 !zone SetPalette
 SetPalette
           ;Bit 6-7 = Mapped Palette
@@ -137,6 +155,7 @@ SetPalette
 
           ;copy palette data (32 entries),
           ldx #0
+          ldy #0
 -
 
           lda PALETTE_DATA, x
@@ -186,32 +205,35 @@ SetPalette
 
 
 !source "game.asm"
-!source "util.asm"
 !source "bonus.asm"
-!source "debugout.asm"
 !source "stages.asm"
 !source "objects.asm"
 !source "gameover.asm"
 !source "title.asm"
 !source "sfxplay.asm"
-
-
-* = $4000 "Charset"
-TILE_DATA
-          !media "game.charsetproject",CHAR,0,NUM_CHARS
+!source "getready.asm"
+!source "debugout.asm"
+!source "util.asm"
 
 PALETTE_DATA
           !media "game.charsetproject",PALETTESWIZZLED,0,32
 
-!source "getready.asm"
+PALETTE_DATA_SPRITES
+          !media "megasisters.spriteproject",PALETTESWIZZLED,0,32
+
+
+!ifndef DISK {
+* = $4000 "Charset"
+TILE_DATA
+          !media "game.charsetproject",CHAR,0,NUM_CHARS
 
 * = $8000
 SPRITE_DATA
           !media "megasisters.spriteproject",SPRITEOPTIMIZE,0,NUM_SPRITES
-
+}
 
 ANIMATED_TILE_DATA
-          !media "tilesanimations.charscreen",CHARSET,0,18
+          !media "tilesanimations.charscreen",CHARSET,0,22
 
 GUI_BAR
           !media "gui.charscreen",CHAR

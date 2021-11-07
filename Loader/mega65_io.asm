@@ -1,10 +1,15 @@
 ﻿;* = * "Floppy IO code"
 
+!cpu m65
+
 SDFILENAME          = $0200 ;-$03ff
 HVC_SD_TO_CHIPRAM   = $36
 HVC_SD_TO_ATTICRAM  = $3e
 
-FILE_BUFFER         = $4200 ; to $3ff
+;temporary buffer of $200 bytes
+FILE_BUFFER         = $0200
+
+;INCLUDE_SD
 
 !macro FLOPPY_LOAD addr, fname
           bra +
@@ -119,11 +124,11 @@ FLOPPYIO.SetLoadAddress
           and #$f0
 
 .Ory = * + 1
-          ora #$ff
+          ora #$ef
           sta DMACopyToDest + 2
 
 .MBank = * + 1
-          lda #$ff
+          lda #$ef
           sta DMACopyToDestination + 4
           rts
 
@@ -170,9 +175,6 @@ FLOPPYIO.LoadFile
           ;FileType
           lda ( <.BufferPtr ), y
           iny
-
-          lda #<.BufferPtr
-          sta $806
 
           ;Get this entries track/sector info
           lda ( <.BufferPtr ), y
@@ -237,7 +239,7 @@ FloppyExit
           lda #$00
           sta $d080
 .RestBP = * + 1
-          lda #$ff
+          lda #$ef
           tab
           rts
 
@@ -392,7 +394,7 @@ CopyToBuffer
           ldx #<FILE_BUFFER
           stx <( .BufferPtr + 0 )
           lda #>FILE_BUFFER
-          clc ;Carry is always already clear here
+          ;clc ;Carry is always already clear here
           adc <.SectorHalf
           sta <( .BufferPtr + 1 )
           rts

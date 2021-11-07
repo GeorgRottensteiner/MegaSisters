@@ -1,7 +1,5 @@
 ﻿NUM_OBJECT_SLOTS = 8
 
-SPRITE_LOCATION = SPRITE_DATA ;$e000
-
 SPRITE_BASE = ( SPRITE_LOCATION % 16384 ) / 64
 
 SPRITE_PLAYER_RUN_R_1   = SPRITE_BASE + 0 * 4
@@ -41,6 +39,7 @@ TYPE_DIAMOND      = 6
 TYPE_ELEVATOR_UP  = 7
 TYPE_CRAB         = 8
 TYPE_PLAYER_SHOT  = 9
+TYPE_DECO         = 10
 
 EXTRA_POWERUP       = 0
 EXTRA_SHOT          = 1
@@ -125,8 +124,6 @@ SpawnObjectInSlot
 
           ;init values
           ldy PARAM3
-          lda TYPE_START_COLOR,y
-          sta OBJECT_COLOR,x
           lda TYPE_START_SPRITE,y
           sta OBJECT_SPRITE,x
           lda #0
@@ -154,6 +151,8 @@ SpawnObjectInSlot
           tay
           lda OBJECT_SPRITE,x
           sta SPRITE_POINTER_BASE,y
+          lda #SPRITE_LOCATION / 16384
+          sta SPRITE_POINTER_BASE + 1,y
 
           ;TODO calc sprite pos
           jsr CalcSpritePosFromCharPos
@@ -868,6 +867,12 @@ BHElevator
 
         jsr ObjectMoveDown
         jsr ObjectMoveDown
+
+        lda OBJECT_POS_Y,x
+        sta OBJECT_POS_Y + 1,x
+        sta OBJECT_POS_Y + 2,x
+        sta OBJECT_POS_Y + 3,x
+
         ldx #0
         jsr ObjectMoveDown
         jsr ObjectMoveDown
@@ -877,6 +882,11 @@ BHElevator
 .MoveUp
         jsr ObjectMoveUp
         jsr ObjectMoveUp
+
+        lda OBJECT_POS_Y,x
+        sta OBJECT_POS_Y + 1,x
+        sta OBJECT_POS_Y + 2,x
+        sta OBJECT_POS_Y + 3,x
 
         ldx #0
         jsr ObjectMoveUp
@@ -921,7 +931,7 @@ BHElevator
         bcs .OutLeft
 
         clc
-        adc #8
+        adc #2
         cmp OBJECT_CHAR_POS_X
         bcc .OutRight
 
@@ -1296,6 +1306,19 @@ IsCharBlocking
 
 .NotExit
 .NotThePlayer2
+          cmp #CHAR_FIRST_DEADLY
+          bcc .NotDeadly
+
+          cpx #0
+          bne .NotBlocking
+
+          lda MOVING_DIR
+          jmp Debug
+
+          jsr PlayerKilled
+          jmp .NotBlocking
+
+.NotDeadly
           cmp #CHAR_LAST_BLOCKING
           bcs .NotBlocking
 
@@ -1761,6 +1784,8 @@ HandleObjectFall
           bne .CanFall
 
           ldy OBJECT_CHAR_POS_Y,x
+          bmi .CanFall
+          beq .CanFall
           cpy #24
           bcs .CanFall
 
@@ -1908,6 +1933,16 @@ ObjectMoveDownBlocking
           adc #1
           and #31
           tay
+
+          ;in score bar?
+          beq .NotBlocked
+          cpy #1
+          beq .NotBlocked
+          cpy #25
+          beq .NotBlocked
+          bcs .NotBlocked
+
+
           lda SCREEN_LINE_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
           lda SCREEN_LINE_OFFSET_HI,y
@@ -1922,7 +1957,6 @@ ObjectMoveDownBlocking
           tay
           lda (ZEROPAGE_POINTER_1),y
 
-
           jsr IsCharBlocking
           bne .BlockedDown
 
@@ -1934,6 +1968,15 @@ ObjectMoveDownBlocking
           adc #1
           and #31
           tay
+
+          ;in score bar?
+          beq .NotBlocked
+          cpy #1
+          beq .NotBlocked
+          cpy #25
+          beq .NotBlocked
+          bcs .NotBlocked
+
           lda SCREEN_LINE_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
           lda SCREEN_LINE_OFFSET_HI,y
@@ -1947,6 +1990,7 @@ ObjectMoveDownBlocking
           jsr IsCharBlocking
           bne .BlockedDown
 
+.NotBlocked
           ;not blocked
           jmp .CanMoveDown
 
@@ -1972,6 +2016,12 @@ ObjectMoveUpBlocking
           bmi .CanMove
           ;inside score bar?
           beq .CanMove
+          cpy #1
+          beq .CanMove
+          cpy #25
+          beq .CanMove
+          bcs .CanMove
+
 
           lda SCREEN_LINE_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
@@ -2127,6 +2177,11 @@ ObjectMoveLeftBlocking
           bmi .CheckNextY
           ;inside score bar?
           beq .CheckNextY
+          cpy #1
+          beq .CheckNextY
+          cpy #25
+          beq .CheckNextY
+          bcs .CheckNextY
 
           lda SCREEN_LINE_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
@@ -2192,6 +2247,11 @@ ObjectMoveRightBlocking
           bmi .CheckNextY
           ;inside score bar?
           beq .CheckNextY
+          cpy #1
+          beq .CheckNextY
+          cpy #25
+          beq .CheckNextY
+          bcs .CheckNextY
 
           lda SCREEN_LINE_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
@@ -2412,18 +2472,7 @@ TYPE_START_SPRITE = * - 1
           !byte SPRITE_ELEVATOR_1
           !byte SPRITE_CRAB_L
           !byte SPRITE_PLAYER_SHOT
-
-TYPE_START_COLOR = * - 1
-          !byte $0a   ;player
-          !byte $0a   ;goomba
-          !byte $01   ;player dying
-          !byte $01   ;flat
-          !byte $01   ;extra
-          !byte $01   ;diamond
-          !byte $01   ;elevator up
-          !byte $01   ;crab
-          !byte $01   ;player shot
-
+          !byte SPRITE_ELEVATOR_1 + 4
 
 ;0 = player
 ;xxxx xxx1 = enemy
@@ -2442,6 +2491,7 @@ TYPE_ENEMY_TYPE = * - 1
           !byte 4     ;elevator up
           !byte 1     ;crab
           !byte 0     ;player shot
+          !byte 0     ;deco
 
 TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHPlayer
@@ -2453,6 +2503,7 @@ TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHElevator
           !byte <BHCrab
           !byte <BHPlayerShot
+          !byte <BHNone
 
 TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHPlayer
@@ -2464,6 +2515,7 @@ TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHElevator
           !byte >BHCrab
           !byte >BHPlayerShot
+          !byte >BHNone
 
 TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;player
@@ -2475,6 +2527,7 @@ TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;elevator
           !byte 0         ;crab
           !byte 0         ;player shot
+          !byte 0         ;deco
 
 
 TYPE_SPAWN_DELTA_X = * - 1
@@ -2484,9 +2537,10 @@ TYPE_SPAWN_DELTA_X = * - 1
           !byte 0         ;flat
           !byte 0         ;extra
           !byte 0         ;diamond
-          !byte 0         ;elevator
+          !byte 4         ;elevator
           !byte 0         ;crab
           !byte 0         ;player shot
+          !byte 4         ;deco
 
 ;offset added onto Y
 TYPE_SPAWN_DELTA_Y = * - 1
@@ -2499,6 +2553,7 @@ TYPE_SPAWN_DELTA_Y = * - 1
           !byte 3         ;elevator
           !byte 0         ;crab
           !byte 0         ;player shot
+          !byte 3         ;deco
 
 FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0   ;player
@@ -2510,6 +2565,7 @@ FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0         ;elevator
           !byte SPRITE_CRAB_FLAT
           !byte 0         ;player shot
+          !byte 0         ;deco
 
 JUMP_TABLE
           !byte 6,6,5,5,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,2,2,1,1,1,0

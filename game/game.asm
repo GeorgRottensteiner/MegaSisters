@@ -1,14 +1,19 @@
 ﻿NUM_LEVEL_ELEMENTS    = 8
 NUM_DUST_ENTRIES      = 3
 
-
+!ifdef DISK {
+TILE_DATA = $10000
+}
 FCM_CHARSET_FIRST_CHAR = ( TILE_DATA / 64 ) % 256
+
 CHAR_DIAMOND_1        = FCM_CHARSET_FIRST_CHAR
 CHAR_BRIDGE_1         = FCM_CHARSET_FIRST_CHAR + 109
 
 CHAR_FIRST_BLOCKING   = FCM_CHARSET_FIRST_CHAR + 60
 CHAR_EXIT             = FCM_CHARSET_FIRST_CHAR + 5
-CHAR_LAST_BLOCKING    = FCM_CHARSET_FIRST_CHAR + 208
+CHAR_LAST_BLOCKING    = FCM_CHARSET_FIRST_CHAR + 192
+
+CHAR_FIRST_DEADLY     = FCM_CHARSET_FIRST_CHAR + 208
 
 CHAR_0                = FCM_CHARSET_FIRST_CHAR + 234 + 0
 CHAR_9                = FCM_CHARSET_FIRST_CHAR + 234 + 9
@@ -29,6 +34,8 @@ CHAR_DUST_2_1         = FCM_CHARSET_FIRST_CHAR + 46 + 6
 CHAR_SECRET_ENTRANCE  = FCM_CHARSET_FIRST_CHAR + 58
 
 CHAR_WINDUP_COLUMN    = FCM_CHARSET_FIRST_CHAR + 129
+CHAR_WATER_TOP_1      = FCM_CHARSET_FIRST_CHAR + 192
+CHAR_WATER_TOP_2      = FCM_CHARSET_FIRST_CHAR + 193
 
 SCROLL_FIRST_ROW = 2
 
@@ -109,7 +116,7 @@ NextLevel
           ldx #0
           jsr SpawnObjectInSlot
 
-          lda #$02
+          lda #( SPRITE_LOCATION / 16384 )
           sta SPRITE_POINTER_BASE + 1
           sta SPRITE_POINTER_BASE + 3
           sta SPRITE_POINTER_BASE + 5
@@ -197,14 +204,6 @@ GameLoop
           lda #252
           jsr WaitFrame
 
-          lda GAME_FREEZE_DELAY
-          beq .NoFreeze
-
-          dec GAME_FREEZE_DELAY
-          jmp GameLoop
-
-.NoFreeze
-
           lda SECRET_STAGE_LEFT
           beq .NotLeavingSecretStage
 
@@ -221,8 +220,8 @@ GameLoop
 
 .NoSecret
           ;setup for top score bar
-          lda #$07 ;#$01
-          sta VIC4.VIC4DIS
+          ;lda #$07 ;#$01
+          ;sta VIC4.VIC4DIS
 
           lda JOYSTICK_PORT_II
           sta JOY_VALUE
@@ -318,7 +317,15 @@ GameLoop
           lda #$50
           sta VIC4.TEXTXPOS
 
+ lda GAME_FREEZE_DELAY
+          beq .NoFreeze
+
+          dec GAME_FREEZE_DELAY
+          jmp .SkipObjectUpdate
+
+.NoFreeze
           jsr ObjectControl
+.SkipObjectUpdate
           jsr SetSpriteValues
 
           jsr AnimateChars
@@ -688,6 +695,36 @@ HardScroll
           ldx #1
           jsr SpawnObjectStartingWithSlot
 
+          lda PARAM3
+          cmp #TYPE_ELEVATOR_UP
+          bne +
+
+          ;spawn the other 3 parts
+          lda #41
+          sta PARAM1
+          lda #TYPE_DECO
+          sta PARAM3
+          ldx #1
+          jsr SpawnObjectStartingWithSlot
+
+          lda #43
+          sta PARAM1
+          lda #TYPE_DECO
+          sta PARAM3
+          ldx #1
+          jsr SpawnObjectStartingWithSlot
+
+          lda #45
+          sta PARAM1
+          lda #TYPE_DECO
+          sta PARAM3
+          ldx #1
+          jsr SpawnObjectStartingWithSlot
+
+          lda #SPRITE_ELEVATOR_1 + 2 * 4
+          sta OBJECT_SPRITE,x
+
++
           jmp .NextLevelDataElement
 
 
@@ -851,6 +888,17 @@ AnimateChars
           and #$03
           tay
 
+          lda #<TILE_DATA
+          sta ZEROPAGE_POINTER_QUAD_1
+          lda #( TILE_DATA >> 8 ) & 0xff
+          sta ZEROPAGE_POINTER_QUAD_1 + 1
+          lda #( TILE_DATA >> 16 ) & 0xff
+          sta ZEROPAGE_POINTER_QUAD_1 + 2
+          sta ZEROPAGE_POINTER_QUAD_2 + 2
+          lda #0
+          sta ZEROPAGE_POINTER_QUAD_1 + 3
+          sta ZEROPAGE_POINTER_QUAD_2 + 3
+
           lda TILE_ANIMATION_TABLE_LO,y
           clc
           adc #<ANIMATED_TILE_DATA
@@ -869,69 +917,179 @@ AnimateChars
           adc #>( 3 * 64 )
           sta .ReadPos2 + 1
 
+          ldz #0
           ldx #0
+
+          lda #<( ( TILE_DATA & $ffff ) + ( CHAR_STAR_1 - 3 ) * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1
+          lda #>( ( TILE_DATA & $ffff ) + ( CHAR_STAR_1 - 3 ) * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1 + 1
+
 -
 .ReadPos = * + 1
           lda $ffff,x
-          sta TILE_DATA + ( CHAR_STAR_1 - 3 ) * 64,x
+          sta [ZEROPAGE_POINTER_QUAD_1],z
+          inx
+          inz
+          cpz #3 * 64
+          bne -
+
+          ldz #0
+          ldx #0
+
+          lda #<( ( TILE_DATA & $ffff ) + ( CHAR_STAR_1 - 3 ) * 64 + 3 * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1
+          lda #>( ( TILE_DATA & $ffff ) + ( CHAR_STAR_1 - 3 ) * 64 + 3 * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1 + 1
+
+-
 .ReadPos2 = * + 1
           lda $ffff,x
-          sta TILE_DATA + ( CHAR_STAR_1 - 3 ) * 64 + 3 * 64,x
+          sta [ZEROPAGE_POINTER_QUAD_1],z
 
           inx
-          cpx #3 * 64
+          inz
+          cpz #3 * 64
           bne -
 
           ;upper right char of powerup star
           ldx #2 * 64
+          ldz #2 * 64
+
+          lda #<( ( TILE_DATA & $ffff ) + 125 * 64 - 2 * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1
+          lda #>( ( TILE_DATA & $ffff ) + 125 * 64 - 2 * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1 + 1
+
+
 -
 .ReadPosB = * + 1
           lda $ffff,x
-          sta TILE_DATA + 125 * 64 - 2 * 64,x
+          sta [ZEROPAGE_POINTER_QUAD_1],z
 
+          inz
           inx
           cpx #2 * 64 + 64
           bne -
 
           ;windup column
-          ldz #3
-          ldx #0
+          lda #2
+          sta PARAM1
+
 --
-          ldy #0
+          lda PARAM1
+          asl
+          asl
+          asl
+          asl
+          asl
+          asl
+          pha
+          clc
+          adc #<( ( TILE_DATA & $ffff ) + CHAR_WINDUP_COLUMN * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1
+          lda #>( ( TILE_DATA & $ffff ) + CHAR_WINDUP_COLUMN * 64 )
+          adc #0
+          sta ZEROPAGE_POINTER_QUAD_1 + 1
+
+          pla
+          clc
+          adc #<( ( TILE_DATA & $ffff ) + CHAR_WINDUP_COLUMN * 64 + 8 )
+          sta ZEROPAGE_POINTER_QUAD_2
+          lda #>( ( TILE_DATA & $ffff ) + CHAR_WINDUP_COLUMN * 64 + 8 )
+          adc #0
+          sta ZEROPAGE_POINTER_QUAD_2 + 1
+
+          ldx #0
+          ldz #0
 -
-          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64,x
-          sta .TILE_DATA_TEMP,y
-          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 1 * 8,x
-          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 0 * 8,x
-          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 2 * 8,x
-          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 1 * 8,x
-          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 3 * 8,x
-          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 2 * 8,x
-          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 4 * 8,x
-          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 3 * 8,x
-          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 5 * 8,x
-          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 4 * 8,x
-          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 6 * 8,x
-          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 5 * 8,x
-          lda TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 7 * 8,x
-          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 6 * 8,x
-          lda .TILE_DATA_TEMP,y
-          sta TILE_DATA + CHAR_WINDUP_COLUMN * 64 + 7 * 8,x
+          lda [ZEROPAGE_POINTER_QUAD_1],z
+          sta .TILE_DATA_TEMP,x
 
           inx
+          inz
+          cpz #8
+          bne  -
+
+          ldz #0
+-
+          lda [ZEROPAGE_POINTER_QUAD_2],z
+          sta [ZEROPAGE_POINTER_QUAD_1],z
+
+          inz
+          cpz #7 * 8
+          bne  -
+
+          ldx #0
+-
+          lda .TILE_DATA_TEMP,x
+          sta [ZEROPAGE_POINTER_QUAD_1],z
+
+          inx
+          inz
+          cpz #8 * 8
+          bne  -
+
+          dec PARAM1
+          bpl --
+
+          ;water
+          lda TILE_ANIMATION_POS
+          and #$03
+          asl
+          asl
+          asl
+          asl
+          asl
+          asl
+          tay
+
+          ldx #0
+          ldz #0
+
+          lda #<( ( TILE_DATA & $ffff ) + CHAR_WATER_TOP_1 * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1
+          lda #>( ( TILE_DATA & $ffff ) + CHAR_WATER_TOP_1 * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1 + 1
+
+-
+          lda ANIMATED_TILE_DATA + 18 * 64,y
+          sta [ZEROPAGE_POINTER_QUAD_1],z
+
+          inz
           iny
-          cpy #8
+          cpz #64
           bne -
 
-          txa
+          lda TILE_ANIMATION_POS
           clc
-          adc #64 - 8
-          tax
+          adc #2
+          and #$03
+          asl
+          asl
+          asl
+          asl
+          asl
+          asl
+          tay
 
-          dez
-          bne --
+          ldz #0
+          lda #<( ( TILE_DATA & $ffff ) + CHAR_WATER_TOP_2 * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1
+          lda #>( ( TILE_DATA & $ffff ) + CHAR_WATER_TOP_2 * 64 )
+          sta ZEROPAGE_POINTER_QUAD_1 + 1
+
+-
+          lda ANIMATED_TILE_DATA + 18 * 64,y
+          sta [ZEROPAGE_POINTER_QUAD_1],z
+
+          inz
+          iny
+          cpz #64
+          bne -
 
 +
+
           rts
 
 .TILE_DATA_TEMP
@@ -1347,7 +1505,7 @@ OUTER_LEVEL_CURRENT_WIDTH
 ;map from level no to bonus map
 LEVEL_BONUS
           !byte 0 ;title
-          !byte 3 ; 0
+          !byte 4 ; 0
           !byte 0
           !byte 0
           !byte 0
