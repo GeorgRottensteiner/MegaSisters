@@ -4,7 +4,7 @@
 !source <mega65.asm>
 
 NUM_CHARS = 244
-NUM_SPRITES = 38
+NUM_SPRITES = 48
 
 LOAD_CODE_LOCATION  = $0400
 

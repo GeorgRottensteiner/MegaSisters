@@ -74,6 +74,7 @@ Respawn
           lda #0
           sta PLAYER_POWERED_UP
           sta GAME_FREEZE_DELAY
+          sta PLAYER_IS_DEAD
 
 !zone NextLevel
 NextLevel
@@ -107,10 +108,27 @@ NextLevel
           lda LEVEL_NR
           jsr PrepareLevelDataPointer
 
+          ;find lowest possible place to stand
+
+          ldy #24
+          sty PARAM2
+-
+          lda SCREEN_LINE_OFFSET_LO,y
+          sta ZEROPAGE_POINTER_1
+          lda SCREEN_LINE_OFFSET_HI,y
+          sta ZEROPAGE_POINTER_1 + 1
+          ldy #5 * 2
+          lda (ZEROPAGE_POINTER_1),y
+          jsr IsCharBlocking
+          beq .FoundStartHeight
+
+          dec PARAM2
+          ldy PARAM2
+          jmp -
+
+.FoundStartHeight
           lda #5
           sta PARAM1
-          lda #18
-          sta PARAM2
           lda #TYPE_PLAYER
           sta PARAM3
           ldx #0
@@ -317,7 +335,7 @@ GameLoop
           lda #$50
           sta VIC4.TEXTXPOS
 
- lda GAME_FREEZE_DELAY
+          lda GAME_FREEZE_DELAY
           beq .NoFreeze
 
           dec GAME_FREEZE_DELAY
@@ -1118,10 +1136,45 @@ NextLive
           jmp Respawn
 
 
-
 !zone PrepareLevelDataPointer
 ;a = level nr
 PrepareLevelDataPointer
+          jsr PrepareLevelDataPointerNoStartScroll
+
+          ;init first part of level
+          lda #40
+          sta PARAM6
+.NextScroll
+          jsr HardScroll
+
+
+          ;move objects left by 8 pixel
+          ldx #0
+-
+          lda OBJECT_ACTIVE,x
+          beq +
+
+          ldz #8
+--
+          jsr ObjectMoveLeft
+          dez
+          bne --
+
++
+          inx
+          cpx #8
+          bne -
+
+          dec PARAM6
+          bne .NextScroll
+
+          rts
+
+
+
+!zone PrepareLevelDataPointerNoStartScroll
+;a = level nr
+PrepareLevelDataPointerNoStartScroll
           sta LEVEL_NR
 
           jsr ClearAllObjects
@@ -1184,34 +1237,8 @@ PrepareLevelDataPointer
           cpx #NUM_DUST_ENTRIES
           bne -
 
-          ;init first part of level
-          lda #40
-          sta PARAM6
-.NextScroll
-          jsr HardScroll
-
-
-          ;move objects left by 8 pixel
-          ldx #0
--
-          lda OBJECT_ACTIVE,x
-          beq +
-
-          ldz #8
---
-          jsr ObjectMoveLeft
-          dez
-          bne --
-
-+
-          inx
-          cpx #8
-          bne -
-
-          dec PARAM6
-          bne .NextScroll
-
           rts
+
 
 
 !zone EnterSecretScreen

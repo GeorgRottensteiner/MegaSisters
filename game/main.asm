@@ -8,6 +8,8 @@ BORDER_WIDTH = $58    ;38 column border width
 SCREEN_CHAR = $0800
 SCREEN_COLOR = $d800
 
+MUSIC_PLAYER = $4000
+
 NUM_SPRITES = 38
 NUM_CHARS   = 245
 
@@ -99,6 +101,8 @@ ENTRY_POINT
           sta PROCESSOR_PORT
 
           cli
+
+          jsr MUSIC_PLAYER
 
           jsr InitIrq
 
@@ -207,13 +211,13 @@ SetPalette
 !source "game.asm"
 !source "bonus.asm"
 !source "stages.asm"
-!source "objects.asm"
 !source "gameover.asm"
 !source "title.asm"
 !source "sfxplay.asm"
 !source "getready.asm"
 !source "debugout.asm"
 !source "util.asm"
+!source "irq.asm"
 
 PALETTE_DATA
           !media "game.charsetproject",PALETTESWIZZLED,0,32
@@ -221,6 +225,17 @@ PALETTE_DATA
 PALETTE_DATA_SPRITES
           !media "megasisters.spriteproject",PALETTESWIZZLED,0,32
 
+ANIMATED_TILE_DATA
+          !media "tilesanimations.charscreen",CHARSET,0,22
+
+GUI_BAR
+          !media "gui.charscreen",CHAR
+
+
+* = MUSIC_PLAYER
+!bin "everlasting.prg",,2
+
+!source "objects.asm"
 
 !ifndef DISK {
 * = $4000 "Charset"
@@ -232,10 +247,4 @@ SPRITE_DATA
           !media "megasisters.spriteproject",SPRITEOPTIMIZE,0,NUM_SPRITES
 }
 
-ANIMATED_TILE_DATA
-          !media "tilesanimations.charscreen",CHARSET,0,22
 
-GUI_BAR
-          !media "gui.charscreen",CHAR
-
-!source "irq.asm"

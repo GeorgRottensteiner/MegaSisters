@@ -47,6 +47,8 @@ TitleLoop
           jsr WaitFrame
 
           jsr AnimateChars
+          jsr ObjectControl
+          jsr SetSpriteValues
 
           lda JOYSTICK_PORT_II
           sta JOY_VALUE
@@ -71,7 +73,7 @@ TitleLoop
 
           ;wrap around
           lda TITLE_LEVEL_NR
-          jsr PrepareLevelDataPointer
+          jsr PrepareLevelDataPointerNoStartScroll
 
 .NeedToScroll
           jsr ScrollBy1Pixel

@@ -24,7 +24,9 @@ IRQMusic
           phx
           phy
 
+          jsr MUSIC_PLAYER + 3
           jsr SFXUpdate
+
 
           ;ACK IRQs
           lda #$01

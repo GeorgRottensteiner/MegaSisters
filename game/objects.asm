@@ -27,6 +27,14 @@ SPRITE_EXTRA_FLASH      = SPRITE_BASE + 35 * 4
 
 SPRITE_PLAYER_SHOT      = SPRITE_BASE + 37 * 4
 
+SPRITE_BEE_1            = SPRITE_BASE + 38 * 4
+SPRITE_BEE_FLAT         = SPRITE_BASE + 40 * 4
+
+SPRITE_FISH_1           = SPRITE_BASE + 41 * 4
+
+SPRITE_EYE_1            = SPRITE_BASE + 45 * 4
+SPRITE_EYE_FLAT         = SPRITE_BASE + 47 * 4
+
 OBJECT_HEIGHT           = 8 * 2
 
 TYPE_NONE         = 0
@@ -40,6 +48,9 @@ TYPE_ELEVATOR_UP  = 7
 TYPE_CRAB         = 8
 TYPE_PLAYER_SHOT  = 9
 TYPE_DECO         = 10
+TYPE_BEE          = 11
+TYPE_FISH         = 12
+TYPE_EYE          = 13
 
 EXTRA_POWERUP       = 0
 EXTRA_SHOT          = 1
@@ -755,6 +766,112 @@ BHGoomba
 
 
 
+!zone BHBee
+BHBee
+          lda OBJECT_DIR,x
+          beq .GoLeft
+
+          jsr ObjectMoveRight
+          jsr ObjectMoveRight
+          jmp .Update
+
+.GoLeft
+          jsr ObjectMoveLeft
+          jsr ObjectMoveLeft
+
+.Update
+          inc OBJECT_ANIM_DELAY,x
+          lda OBJECT_ANIM_DELAY,x
+          and #$04
+          ora #SPRITE_BEE_1
+          sta OBJECT_SPRITE,x
+          rts
+
+
+
+!zone BHFish
+BHFish
+          ldy OBJECT_DIR_Y,x
+          lda FISH_DELTA,y
+          beq .UpdateTablePointer
+          sta PARAM2
+          bpl .GoUp
+
+          lda #$00
+          sec
+          sbc PARAM2
+          lsr
+          beq .UpdateTablePointer
+          sta PARAM2
+
+          lda #SPRITE_FISH_1 + 3 * 4
+          sta OBJECT_SPRITE,x
+
+
+-
+          jsr ObjectMoveDown
+
+          dec PARAM2
+          bne -
+
+.UpdateTablePointer
+          ;only update every 2nd time
+          inc OBJECT_DIR,x
+          lda OBJECT_DIR,x
+          and #$01
+          beq +
+
+          inc OBJECT_DIR_Y,x
+          lda OBJECT_DIR_Y,x
+          cmp #36
+          bne +
+
+          lda #0
+          sta OBJECT_DIR_Y,x
+
++
+
+          rts
+
+
+.GoUp
+          inc OBJECT_ANIM_DELAY,x
+          lda OBJECT_ANIM_DELAY,x
+          and #$03
+          bne +
+
+          inc OBJECT_ANIM_POS,x
+          lda OBJECT_ANIM_POS,x
+          and #$03
+          tay
+          lda PING_PONG_TABLE,y
+          asl
+          asl
+          clc
+          adc #SPRITE_FISH_1
+          sta OBJECT_SPRITE,x
+
+
++
+
+          lsr PARAM2
+          beq .UpdateTablePointer
+
+-
+          jsr ObjectMoveUp
+
+          dec PARAM2
+          bne -
+
+          bra .UpdateTablePointer
+
+FISH_DELTA
+          !byte $0a,$0a,$0a,$09,$09,$09,$08,$08,$07,$07,$06,$05,$04,$04,$03,$02,$01,$00,$00,$ff,$fe,$fd,$fc,$fc,$fb,$fa,$f9,$f9,$f8,$f8,$f7,$f7,$f7,$f6,$f6,$f6
+
+PING_PONG_TABLE
+          !byte 0,1,2,1
+
+
 !zone BHCrab
 BHCrab
           jsr HandleObjectFall
@@ -787,6 +904,41 @@ BHCrab
 
 CRAB_SPRITE
           !byte SPRITE_CRAB_L, SPRITE_CRAB_R
+
+
+
+!zone BHEye
+BHEye
+          jsr HandleObjectFall
+
+          lda OBJECT_DIR,x
+          beq .GoLeft
+
+          jsr ObjectMoveRightBlocking
+          beq .Blocked
+          jmp .Update
+
+.GoLeft
+          jsr ObjectMoveLeftBlocking
+          bne .Update
+
+.Blocked
+          lda OBJECT_DIR,x
+          eor #$01
+          sta OBJECT_DIR,x
+
+.Update
+          ldy OBJECT_DIR,x
+          inc OBJECT_ANIM_DELAY,x
+          lda OBJECT_ANIM_DELAY,x
+          and #$04
+          clc
+          adc EYE_SPRITE,y
+          sta OBJECT_SPRITE,x
+          rts
+
+EYE_SPRITE
+          !byte SPRITE_EYE_1, SPRITE_EYE_1
 
 
 
@@ -1108,9 +1260,17 @@ CheckCollisions
           cmp #1
           beq .KillEnemyWithShot
           cmp #2
-          beq .KillEnemyWithShot
+          beq .KillShot
+          ;beq .KillEnemyWithShot
 
           jmp .NextObject
+
+.KillShot
+          lda #0
+          sta PLAYER_SHOT_ACTIVE
+
+          ;remove shot
+          jmp RemoveObject
 
 .KillEnemyWithShot
           lda #0
@@ -1225,12 +1385,12 @@ FlattenEnemy
 
 
 
-;a = 0 > not blocking
-;a = 1 - blocking
 !zone IsCharBlocking
 .X_POS
           !byte 0
 
+;a = 0 > not blocking
+;a = 1 - blocking
 IsCharBlocking
           cpx #0
           bne .NotThePlayer2
@@ -2126,8 +2286,6 @@ ObjectMoveLeft
 
           ;yes!
           jsr RemoveObject
-          ;inc VIC.BORDER_COLOR
-          ;jmp *
 
 .NotOutsideLeft
 +
@@ -2154,9 +2312,17 @@ ObjectMoveLeftBlocking
           rts
 
 .CheckCanMoveLeft
+          cpx #0
+          bne .NotThePlayer
+
           lda OBJECT_CHAR_POS_X,x
           cmp BLOCK_BORDER_L
           beq .Blocked
+
+.NotThePlayer
+          ;outside left
+          lda OBJECT_CHAR_POS_X,x
+          bmi .CanMoveLeft
 
           ;check
           lda #2
@@ -2473,6 +2639,8 @@ TYPE_START_SPRITE = * - 1
           !byte SPRITE_CRAB_L
           !byte SPRITE_PLAYER_SHOT
           !byte SPRITE_ELEVATOR_1 + 4
+          !byte SPRITE_BEE_1
+          !byte SPRITE_FISH_1
 
 ;0 = player
 ;xxxx xxx1 = enemy
@@ -2492,6 +2660,9 @@ TYPE_ENEMY_TYPE = * - 1
           !byte 1     ;crab
           !byte 0     ;player shot
           !byte 0     ;deco
+          !byte 1     ;bee
+          !byte 2     ;fish
+          !byte 1     ;eye
 
 TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHPlayer
@@ -2504,6 +2675,9 @@ TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHCrab
           !byte <BHPlayerShot
           !byte <BHNone
+          !byte <BHBee
+          !byte <BHFish
+          !byte <BHEye
 
 TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHPlayer
@@ -2516,6 +2690,9 @@ TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHCrab
           !byte >BHPlayerShot
           !byte >BHNone
+          !byte >BHBee
+          !byte >BHFish
+          !byte >BHEye
 
 TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;player
@@ -2528,6 +2705,9 @@ TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;crab
           !byte 0         ;player shot
           !byte 0         ;deco
+          !byte 0         ;bee
+          !byte 0         ;fish
+          !byte 0         ;eye
 
 
 TYPE_SPAWN_DELTA_X = * - 1
@@ -2541,6 +2721,9 @@ TYPE_SPAWN_DELTA_X = * - 1
           !byte 0         ;crab
           !byte 0         ;player shot
           !byte 4         ;deco
+          !byte 0         ;bee
+          !byte 4         ;fish
+          !byte 0         ;eye
 
 ;offset added onto Y
 TYPE_SPAWN_DELTA_Y = * - 1
@@ -2554,6 +2737,9 @@ TYPE_SPAWN_DELTA_Y = * - 1
           !byte 0         ;crab
           !byte 0         ;player shot
           !byte 3         ;deco
+          !byte 1         ;bee
+          !byte 1         ;fish
+          !byte 1         ;eye
 
 FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0   ;player
@@ -2566,6 +2752,9 @@ FLATTENED_ENEMY_SPRITE = * - 1
           !byte SPRITE_CRAB_FLAT
           !byte 0         ;player shot
           !byte 0         ;deco
+          !byte SPRITE_BEE_FLAT
+          !byte 0         ;fish
+          !byte SPRITE_EYE_FLAT
 
 JUMP_TABLE
           !byte 6,6,5,5,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,2,2,1,1,1,0
