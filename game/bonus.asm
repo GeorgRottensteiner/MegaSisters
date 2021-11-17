@@ -116,6 +116,15 @@ BonusLoop
           lda #0
           sta BUTTON_RELEASED
 
+          inc STAGE + 1
+          lda STAGE + 1
+          cmp #CHAR_9 + 1
+          bne .Overflow
+          lda #CHAR_0
+          sta STAGE + 1
+          inc STAGE
+.Overflow
+
           inc LEVEL_NR
           jmp NextLevel
 

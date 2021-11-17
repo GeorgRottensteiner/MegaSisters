@@ -81,6 +81,8 @@ NextLevel
           lda #0
           sta REACHED_EXIT
           sta PLAYER_SHOT_ACTIVE
+          sta SCROLL_SPEED
+          sta SCROLL_SPEED_POS
 
           jsr ClearAllObjects
           jsr GetReady
@@ -319,8 +321,16 @@ GameLoop
           lda Mega65.PRESSED_KEY
           beq .NoKey
 
-          lda #0
-          sta Mega65.PRESSED_KEY
+          ldx #0
+          stx Mega65.PRESSED_KEY
+
+          cmp #'a'
+          bne +
+
+          lda #1
+          sta REACHED_EXIT
+
++
 
           ;lda #1
           ;sta REACHED_EXIT
@@ -714,6 +724,34 @@ HardScroll
           jsr SpawnObjectStartingWithSlot
 
           lda PARAM3
+          cmp #TYPE_ANT
+          bne +
+
+          lda #SPRITE_ANT
+          sta OBJECT_SPRITE,x
+
+          ;spawn the other 2 parts
+          lda #41
+          sta PARAM1
+          lda #TYPE_DECO
+          sta PARAM3
+          inx
+          jsr SpawnObjectInSlot
+          lda #SPRITE_ANT + 1 * 4
+          sta OBJECT_SPRITE,x
+
+          lda #43
+          sta PARAM1
+          lda #TYPE_DECO
+          sta PARAM3
+          inx
+          jsr SpawnObjectInSlot
+          lda #SPRITE_ANT + 2 * 4
+          sta OBJECT_SPRITE,x
+
+          jmp .NextLevelDataElement
+
++
           cmp #TYPE_ELEVATOR_UP
           bne +
 
@@ -722,22 +760,22 @@ HardScroll
           sta PARAM1
           lda #TYPE_DECO
           sta PARAM3
-          ldx #1
-          jsr SpawnObjectStartingWithSlot
+          inx
+          jsr SpawnObjectInSlot
 
           lda #43
           sta PARAM1
           lda #TYPE_DECO
           sta PARAM3
-          ldx #1
-          jsr SpawnObjectStartingWithSlot
+          inx
+          jsr SpawnObjectInSlot
 
           lda #45
           sta PARAM1
           lda #TYPE_DECO
           sta PARAM3
-          ldx #1
-          jsr SpawnObjectStartingWithSlot
+          inx
+          jsr SpawnObjectInSlot
 
           lda #SPRITE_ELEVATOR_1 + 2 * 4
           sta OBJECT_SPRITE,x

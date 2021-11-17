@@ -177,31 +177,31 @@ SetPalette
           ;duplicate sprite palettes
           ;sprite palettes have 16 entries per sprite for 16 color mode
           ;use palette bank 1
-          lda #%10011001
-          sta VIC4.PALSEL
-
-          ldx #$00
-          ldy #0
--
-          lda PALETTE_DATA, x
-          sta VIC4.PALRED,y
-          lda PALETTE_DATA + 1 * 32, x
-          sta VIC4.PALGREEN,y
-          lda PALETTE_DATA + 2 * 32, x
-          sta VIC4.PALBLUE,y
-
-          iny
-
-          inx
-          cpx #16
-          bne -
-
-          ldx #0
-          cpy #16 * 8
-          bne -
+          ;lda #%10011001
+;          sta VIC4.PALSEL
+;
+;          ldx #$00
+;          ldy #0
+;-
+;          lda PALETTE_DATA_SPRITES, x
+;          sta VIC4.PALRED,y
+;          lda PALETTE_DATA_SPRITES + 1 * 32, x
+;          sta VIC4.PALGREEN,y
+;          lda PALETTE_DATA_SPRITES + 2 * 32, x
+;          sta VIC4.PALBLUE,y
+;
+;          iny
+;
+;          inx
+;          cpx #16
+;          bne -
+;
+;          ldx #0
+;          cpy #16 * 8
+;          bne -
 
           ;set sprite pal to bank 1
-          lda #%01011001
+          lda #%10011001
           sta VIC4.PALSEL
 
           rts
@@ -222,9 +222,6 @@ SetPalette
 PALETTE_DATA
           !media "game.charsetproject",PALETTESWIZZLED,0,32
 
-PALETTE_DATA_SPRITES
-          !media "megasisters.spriteproject",PALETTESWIZZLED,0,32
-
 ANIMATED_TILE_DATA
           !media "tilesanimations.charscreen",CHARSET,0,22
 
@@ -234,6 +231,10 @@ GUI_BAR
 
 * = MUSIC_PLAYER
 !bin "everlasting.prg",,2
+
+PALETTE_DATA_SPRITES
+          !media "megasisters.spriteproject",PALETTESWIZZLED,0,32
+
 
 !source "objects.asm"
 

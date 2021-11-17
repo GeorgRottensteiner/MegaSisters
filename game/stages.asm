@@ -22,11 +22,18 @@ EL__UNDERGROUNDBRICK = 20
 EL__WATER.TOP = 21
 EL__WATER = 22
 EL__VINES = 23
+EL__ORANGEBRICK.TL = 24
+EL__ORANGEBRICK.T = 25
+EL__ORANGEBRICK.TR = 26
+EL__ORANGEBRICK.L = 27
+EL__ORANGEBRICK.C = 28
+EL__ORANGEBRICK.R = 29
+EL__BRIDGE.UNBREAKABLE = 30
 
 ELEMENT_WIDTH_TABLE
-!byte 3,4,3,6,2,2,3,2,2,2,2,3,5,6,6,4,3,2,2,3,2,2,2,2
+!byte 3,4,3,6,2,2,3,2,2,2,2,3,5,6,6,4,3,2,2,3,2,2,2,2,2,2,2,2,2,2,2
 ELEMENT_HEIGHT_TABLE
-!byte 2,3,2,3,2,2,2,1,3,3,2,2,1,2,3,3,2,2,1,1,2,1,2,2
+!byte 2,3,2,3,2,2,2,1,3,3,2,2,1,2,3,3,2,2,1,1,2,1,2,2,2,2,2,2,2,2,1
 ELEMENT_TABLE_LO
 !byte <( DATA_EL__BRICK )
 !byte <( DATA_EL__GROUND.C )
@@ -52,6 +59,13 @@ ELEMENT_TABLE_LO
 !byte <( DATA_EL__WATER.TOP )
 !byte <( DATA_EL__WATER )
 !byte <( DATA_EL__VINES )
+!byte <( DATA_EL__ORANGEBRICK.TL )
+!byte <( DATA_EL__ORANGEBRICK.T )
+!byte <( DATA_EL__ORANGEBRICK.TR )
+!byte <( DATA_EL__ORANGEBRICK.L )
+!byte <( DATA_EL__ORANGEBRICK.C )
+!byte <( DATA_EL__ORANGEBRICK.R )
+!byte <( DATA_EL__BRIDGE.UNBREAKABLE )
 
 ELEMENT_TABLE_HI
 !byte >( DATA_EL__BRICK )
@@ -78,6 +92,13 @@ ELEMENT_TABLE_HI
 !byte >( DATA_EL__WATER.TOP )
 !byte >( DATA_EL__WATER )
 !byte >( DATA_EL__VINES )
+!byte >( DATA_EL__ORANGEBRICK.TL )
+!byte >( DATA_EL__ORANGEBRICK.T )
+!byte >( DATA_EL__ORANGEBRICK.TR )
+!byte >( DATA_EL__ORANGEBRICK.L )
+!byte >( DATA_EL__ORANGEBRICK.C )
+!byte >( DATA_EL__ORANGEBRICK.R )
+!byte >( DATA_EL__BRIDGE.UNBREAKABLE )
 
 DATA_EL__BRICK
 !byte 60,63,61,64,62,65
@@ -127,6 +148,20 @@ DATA_EL__WATER
 !byte 194,194,194,194
 DATA_EL__VINES
 !byte 134,136,135,137
+DATA_EL__ORANGEBRICK.TL
+!byte 138,146,139,147
+DATA_EL__ORANGEBRICK.T
+!byte 140,148,139,147
+DATA_EL__ORANGEBRICK.TR
+!byte 140,148,141,149
+DATA_EL__ORANGEBRICK.L
+!byte 142,146,144,147
+DATA_EL__ORANGEBRICK.C
+!byte 145,148,144,147
+DATA_EL__ORANGEBRICK.R
+!byte 145,148,143,149
+DATA_EL__BRIDGE.UNBREAKABLE
+!byte 150,151
 
 
 _SCREEN_DATA_TABLE
@@ -136,6 +171,7 @@ _SCREEN_DATA_TABLE
           !word _LEVEL_4
           !word _LEVEL_5
           !word _LEVEL_6
+          !word _LEVEL_7
           !word 0
 
 
@@ -338,13 +374,9 @@ _LEVEL_2 ;Stage 1
           !byte LDF_ELEMENT_LINE + 22,28,EL__GROUND.C
           !byte LDF_X_POS + 1; 1
           !byte LDF_ELEMENT_LINE + 19,1,EL__BUSH.2
-          !byte LDF_X_POS + 22; 23
-          !byte LD_OBJECT | 11, 24
-          !byte LDF_X_POS + 1; 24
+          !byte LDF_X_POS + 23; 24
           !byte LDF_ELEMENT_LINE + 20,1,EL__BUSH.1
-          !byte LDF_X_POS + 9; 33
-          !byte LDF_ELEMENT_LINE + 16,1,EL__BRICK_DIAMOND
-          !byte LDF_X_POS + 9; 42
+          !byte LDF_X_POS + 18; 42
           !byte LDF_ELEMENT_LINE + 16,1,EL__BRICK
           !byte LDF_X_POS + 1; 43
           !byte LD_OBJECT | 1, 21
@@ -547,6 +579,143 @@ _LEVEL_3 ;Stage 2
 
 
 _LEVEL_4 ;Stage 3
+          !word 200
+          !byte 0
+          !byte LDF_ELEMENT_LINE + 13,3,EL__ORANGEBRICK.T
+          !byte LDF_ELEMENT_AREA + 15,3,5,EL__ORANGEBRICK.C
+          !byte LDF_X_POS + 6; 6
+          !byte LDF_ELEMENT + 13,EL__ORANGEBRICK.TR
+          !byte LDF_ELEMENT_AREA + 15, 1,5,EL__ORANGEBRICK.R
+          !byte LDF_X_POS + 2; 8
+          !byte LDF_ELEMENT_LINE + 22,5,EL__WATER.TOP
+          !byte LDF_ELEMENT_LINE + 23,5,EL__WATER
+          !byte LDF_ELEMENT_LINE + 13,3,EL__BRIDGE.UNBREAKABLE
+          !byte LDF_X_POS + 6; 14
+          !byte LDF_ELEMENT_LINE + 13,3,EL__BRIDGE
+          !byte LDF_X_POS + 4; 18
+          !byte LDF_ELEMENT + 23,EL__ORANGEBRICK.L
+          !byte LDF_ELEMENT + 21,EL__ORANGEBRICK.TL
+          !byte LDF_X_POS + 2; 20
+          !byte LDF_ELEMENT_LINE + 23,8,EL__ORANGEBRICK.C
+          !byte LDF_ELEMENT_LINE + 21,8,EL__ORANGEBRICK.T
+          !byte LDF_X_POS + 6; 26
+          !byte LDF_ELEMENT + 12,EL__STAREXTRA
+          !byte LDF_X_POS + 10; 36
+          !byte LDF_ELEMENT + 21,EL__ORANGEBRICK.TR
+          !byte LDF_ELEMENT + 23,EL__ORANGEBRICK.R
+          !byte LDF_X_POS + 2; 38
+          !byte LDF_ELEMENT_LINE + 22,5,EL__WATER.TOP
+          !byte LDF_ELEMENT_LINE + 23,5,EL__WATER
+          !byte LDF_X_POS + 5; 43
+          !byte LD_OBJECT | 11, 24
+          !byte LDF_X_POS + 5; 48
+          !byte LDF_ELEMENT + 23,EL__ORANGEBRICK.L
+          !byte LDF_ELEMENT + 21,EL__ORANGEBRICK.TL
+          !byte LDF_X_POS + 2; 50
+          !byte LDF_ELEMENT_LINE + 23,5,EL__ORANGEBRICK.C
+          !byte LDF_ELEMENT_LINE + 21,5,EL__ORANGEBRICK.T
+          !byte LDF_X_POS + 10; 60
+          !byte LDF_ELEMENT + 21,EL__ORANGEBRICK.TR
+          !byte LDF_ELEMENT + 23,EL__ORANGEBRICK.R
+          !byte LDF_X_POS + 2; 62
+          !byte LDF_ELEMENT_LINE + 22,4,EL__WATER.TOP
+          !byte LDF_ELEMENT_LINE + 23,4,EL__WATER
+          !byte LDF_X_POS + 5; 67
+          !byte LD_OBJECT | 10, 18
+          !byte LDF_X_POS + 3; 70
+          !byte LDF_ELEMENT + 17,EL__ORANGEBRICK.TL
+          !byte LDF_ELEMENT_AREA + 19, 1,3,EL__ORANGEBRICK.L
+          !byte LDF_X_POS + 2; 72
+          !byte LDF_ELEMENT_AREA + 19,5,3,EL__ORANGEBRICK.C
+          !byte LDF_ELEMENT_LINE + 17,5,EL__ORANGEBRICK.T
+          !byte LDF_X_POS + 9; 81
+          !byte LD_OBJECT | 10, 14
+          !byte LDF_X_POS + 1; 82
+          !byte LDF_ELEMENT + 17,EL__ORANGEBRICK.TR
+          !byte LDF_ELEMENT_AREA + 19, 1,3,EL__ORANGEBRICK.R
+          !byte LDF_X_POS + 2; 84
+          !byte LDF_ELEMENT_LINE + 22,3,EL__WATER.TOP
+          !byte LDF_ELEMENT_LINE + 23,3,EL__WATER
+          !byte LDF_X_POS + 6; 90
+          !byte LDF_ELEMENT + 9,EL__ORANGEBRICK.TL
+          !byte LDF_ELEMENT_AREA + 11, 1,7,EL__ORANGEBRICK.L
+          !byte LDF_X_POS + 2; 92
+          !byte LDF_ELEMENT_AREA + 11,5,7,EL__ORANGEBRICK.C
+          !byte LDF_ELEMENT_LINE + 9,5,EL__ORANGEBRICK.T
+          !byte LDF_X_POS + 10; 102
+          !byte LDF_ELEMENT + 9,EL__ORANGEBRICK.TR
+          !byte LDF_ELEMENT_AREA + 11, 1,7,EL__ORANGEBRICK.R
+          !byte LDF_X_POS + 2; 104
+          !byte LDF_ELEMENT_LINE + 17,8,EL__BRIDGE.UNBREAKABLE
+          !byte LDF_ELEMENT_LINE + 22,8,EL__WATER.TOP
+          !byte LDF_ELEMENT_LINE + 23,8,EL__WATER
+          !byte LDF_X_POS + 6; 110
+          !byte LD_OBJECT | 11, 24
+          !byte LDF_X_POS + 5; 115
+          !byte LD_OBJECT | 11, 24
+          !byte LDF_X_POS + 5; 120
+          !byte LDF_ELEMENT + 17,EL__ORANGEBRICK.TL
+          !byte LDF_ELEMENT_AREA + 19, 1,3,EL__ORANGEBRICK.L
+          !byte LDF_X_POS + 2; 122
+          !byte LDF_ELEMENT_AREA + 19, 1,3,EL__ORANGEBRICK.C
+          !byte LDF_ELEMENT + 17,EL__ORANGEBRICK.T
+          !byte LDF_X_POS + 2; 124
+          !byte LDF_ELEMENT + 17,EL__ORANGEBRICK.TR
+          !byte LDF_ELEMENT_AREA + 19, 1,3,EL__ORANGEBRICK.R
+          !byte LDF_X_POS + 2; 126
+          !byte LDF_ELEMENT_LINE + 17,8,EL__BRIDGE.UNBREAKABLE
+          !byte LDF_ELEMENT_LINE + 22,8,EL__WATER.TOP
+          !byte LDF_ELEMENT_LINE + 23,8,EL__WATER
+          !byte LDF_X_POS + 5; 131
+          !byte LD_OBJECT | 11, 24
+          !byte LDF_X_POS + 5; 136
+          !byte LD_OBJECT | 11, 24
+          !byte LDF_X_POS + 6; 142
+          !byte LDF_ELEMENT + 17,EL__ORANGEBRICK.TL
+          !byte LDF_ELEMENT_AREA + 19, 1,3,EL__ORANGEBRICK.L
+          !byte LDF_X_POS + 2; 144
+          !byte LDF_ELEMENT + 17,EL__ORANGEBRICK.T
+          !byte LDF_ELEMENT_AREA + 19, 1,3,EL__ORANGEBRICK.C
+          !byte LDF_X_POS + 2; 146
+          !byte LDF_ELEMENT + 17,EL__ORANGEBRICK.TR
+          !byte LDF_ELEMENT_AREA + 19, 1,3,EL__ORANGEBRICK.R
+          !byte LDF_X_POS + 2; 148
+          !byte LDF_ELEMENT_LINE + 17,8,EL__BRIDGE.UNBREAKABLE
+          !byte LDF_ELEMENT_LINE + 22,8,EL__WATER.TOP
+          !byte LDF_ELEMENT_LINE + 23,8,EL__WATER
+          !byte LDF_X_POS + 5; 153
+          !byte LD_OBJECT | 11, 24
+          !byte LDF_X_POS + 5; 158
+          !byte LD_OBJECT | 11, 24
+          !byte LDF_X_POS + 6; 164
+          !byte LDF_ELEMENT + 9,EL__ORANGEBRICK.TL
+          !byte LDF_ELEMENT_AREA + 11, 1,7,EL__ORANGEBRICK.L
+          !byte LDF_X_POS + 2; 166
+          !byte LDF_ELEMENT + 9,EL__ORANGEBRICK.T
+          !byte LDF_ELEMENT_AREA + 11, 1,7,EL__ORANGEBRICK.C
+          !byte LDF_X_POS + 2; 168
+          !byte LDF_ELEMENT + 9,EL__ORANGEBRICK.TR
+          !byte LDF_ELEMENT_AREA + 11, 1,7,EL__ORANGEBRICK.R
+          !byte LDF_X_POS + 2; 170
+          !byte LDF_ELEMENT_LINE + 9,10,EL__BRIDGE
+          !byte LDF_ELEMENT_LINE + 22,10,EL__WATER.TOP
+          !byte LDF_ELEMENT_LINE + 23,10,EL__WATER
+          !byte LDF_X_POS + 16; 186
+          !byte LD_OBJECT | 10, 6
+          !byte LDF_X_POS + 4; 190
+          !byte LDF_ELEMENT + 9,EL__ORANGEBRICK.TL
+          !byte LDF_ELEMENT_AREA + 11, 1,7,EL__ORANGEBRICK.L
+          !byte LDF_X_POS + 1; 191
+          !byte LD_OBJECT | 10, 8
+          !byte LDF_X_POS + 1; 192
+          !byte LDF_ELEMENT_AREA + 11,4,7,EL__ORANGEBRICK.C
+          !byte LDF_ELEMENT_LINE + 9,4,EL__ORANGEBRICK.T
+          !byte LDF_X_POS + 6; 198
+          !byte LDF_ELEMENT_AREA + 1, 1,4,EL__EXIT
+          !byte LD_END
+
+
+_LEVEL_5 ;Stage 4
           !word 240
           !byte 3
           !byte LDF_ELEMENT_LINE + 2,120,EL__UNDERGROUNDBRICK
@@ -612,8 +781,9 @@ _LEVEL_4 ;Stage 3
           !byte LDF_ELEMENT_LINE + 23,22,EL__UNDERGROUNDBRICK
           !byte LDF_X_POS + 4; 200
           !byte LDF_PREV_ELEMENT_AREA + 4,2,134
-          !byte LDF_X_POS + 31; 234
-          !byte LDF_X_POS + 3; 234
+          !byte LDF_X_POS + 24; 224
+          !byte LD_OBJECT | 14, 22
+          !byte LDF_X_POS + 10; 234
           !byte LDF_PREV_ELEMENT_AREA + 4,3,133
           !byte LDF_PREV_ELEMENT_LINE + 21,3
           !byte LDF_X_POS + 2; 236
@@ -623,7 +793,7 @@ _LEVEL_4 ;Stage 3
           !byte LD_END
 
 
-_LEVEL_5 ;Bonus #1
+_LEVEL_6 ;Bonus #1
           !word 40
           !byte 0
           !byte LDF_ELEMENT_AREA + 2, 1,11,EL__BRICK
@@ -644,7 +814,7 @@ _LEVEL_5 ;Bonus #1
           !byte LD_END
 
 
-_LEVEL_6 ;Xmas Forum64
+_LEVEL_7 ;Xmas Forum64
           !word 299
           !byte 0
           !byte LDF_ELEMENT_LINE + 22,28,EL__GROUND.C

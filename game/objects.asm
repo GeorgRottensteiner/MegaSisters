@@ -35,6 +35,9 @@ SPRITE_FISH_1           = SPRITE_BASE + 41 * 4
 SPRITE_EYE_1            = SPRITE_BASE + 45 * 4
 SPRITE_EYE_FLAT         = SPRITE_BASE + 47 * 4
 
+SPRITE_DRAGON           = SPRITE_BASE + 57 * 4
+SPRITE_ANT              = SPRITE_BASE + 48 * 4
+
 OBJECT_HEIGHT           = 8 * 2
 
 TYPE_NONE         = 0
@@ -51,6 +54,8 @@ TYPE_DECO         = 10
 TYPE_BEE          = 11
 TYPE_FISH         = 12
 TYPE_EYE          = 13
+TYPE_DRAGON       = 14
+TYPE_ANT          = 15
 
 EXTRA_POWERUP       = 0
 EXTRA_SHOT          = 1
@@ -149,6 +154,7 @@ SpawnObjectInSlot
           sta OBJECT_MOVE_SPEED_X,x
           sta OBJECT_MOVE_SPEED_Y,x
           sta OBJECT_STATE,x
+          sta OBJECT_STATE_POS,x
           sta OBJECT_DIR,x
           sta OBJECT_DIR_Y,x
           sta OBJECT_POS_X_EX,x
@@ -165,7 +171,6 @@ SpawnObjectInSlot
           lda #SPRITE_LOCATION / 16384
           sta SPRITE_POINTER_BASE + 1,y
 
-          ;TODO calc sprite pos
           jsr CalcSpritePosFromCharPos
 
           ldy OBJECT_ACTIVE,x
@@ -179,15 +184,8 @@ SpawnObjectInSlot
           adc OBJECT_POS_Y,x
           sta OBJECT_POS_Y,x
 
-          lda BIT_TABLE,x
-          tsb VIC.SPRITE_ENABLE
-          ;tsb VIC.SPRITE_MULTICOLOR
-
-          ;lda OBJECT_SPRITE,x
-          ;sta SPRITE_POINTER_BASE,y
-          ;sta SPRITE_POINTER_BASE_2,y
-          lda OBJECT_COLOR,x
-          sta VIC.SPRITE_COLOR,x
+          ;lda OBJECT_COLOR,x
+          ;sta VIC.SPRITE_COLOR,x
 
           lda TYPE_START_SPRITE_FLAGS,y
           bit #SF_DIR_R
@@ -220,7 +218,53 @@ SpawnObjectInSlot
           lda #0
           sta VIC.SPRITE_COLOR,x
 
+          ldy PARAM3
+
+          ;source palette slot, type * 16
+          lda TYPE_SPRITE_PALETTE,y
+          ;*16
+          asl
+          asl
+          asl
+          asl
+          tay
+
+          phx
+
+          ;target slot = sprite no * 16
+          txa
+          asl
+          asl
+          asl
+          asl
+          tax
+
+          ;copy sprite palette
+          lda #$cc
+          trb VIC4.PALSEL
+          lda #$88
+          tsb VIC4.PALSEL
+
+          ldz #0
+
+-
+          lda PALETTE_DATA_SPRITES, y
+          sta VIC4.PALRED,x
+          lda PALETTE_DATA_SPRITES + 1 * 32, y
+          sta VIC4.PALGREEN,x
+          lda PALETTE_DATA_SPRITES + 2 * 32, y
+          sta VIC4.PALBLUE,x
+
+          inx
+          iny
+          inz
+          cpz #16
+          bne -
+
+          plx
+
           rts
+
 
 
 ;------------------------------------------------------------
@@ -942,6 +986,83 @@ EYE_SPRITE
 
 
 
+!zone BHDragon
+BHDragon
+          rts
+
+
+
+!zone BHAnt
+BHAnt
+          lda OBJECT_STATE_POS,x
+          bne .HandleStep
+
+          ;find next action
+          ldy OBJECT_STATE,x
+          lda ANT_MOVE_TABLE,y
+          cmp #3
+          bne +
+
+          lda #0
+          sta OBJECT_STATE,x
+          tay
+          lda ANT_MOVE_TABLE,y
++
+          sta OBJECT_MOVE_SPEED_X,x
+          lda ANT_MOVE_TABLE + 1,y
+          sta OBJECT_STATE_POS,x
+
+          inc OBJECT_STATE,x
+          inc OBJECT_STATE,x
+
+.HandleStep
+          dec OBJECT_STATE_POS,x
+
+          ;0 = wait, 1 = left, 2 = right, 3 = restart
+          lda OBJECT_MOVE_SPEED_X,x
+          beq .WaitDone
+          cmp #1
+          bne +
+
+          jsr ObjectMoveLeft
+          inx
+          jsr ObjectMoveLeft
+          inx
+          jsr ObjectMoveLeft
+          dex
+          dex
+          rts
+
++
+          ;right option is left
+          jsr ObjectMoveRight
+          inx
+          jsr ObjectMoveRight
+          inx
+          jsr ObjectMoveRight
+          dex
+          dex
+
+
+.WaitDone
+          rts
+
+;0 = wait, 1 = left, 2 = right, 3 = restart
+ANT_MOVE_TABLE
+          !byte 0,40
+          !byte 1,40
+          !byte 0,20
+          !byte 2,40
+          !byte 1,20
+          !byte 0,20
+          !byte 2,20
+          !byte 0,20
+          !byte 1,80
+          !byte 2,80
+          !byte 3
+
+
+
 !zone BHExtra
 BHExtra
           lda OBJECT_FLAGS,x
@@ -1439,6 +1560,10 @@ IsCharBlocking
           cmp #CHAR_BRIDGE_1 + 4
           bcs .NotBridge
 
+          ldz MOVING_DIR
+          cpz #DIR_D
+          lbne .NotBlocking
+
           ;on a bridge!
           ;inc VIC.BORDER_COLOR
           clc
@@ -1451,6 +1576,10 @@ IsCharBlocking
           bcc .NotBridge2
           cmp #CHAR_BRIDGE_1 + 6
           bcs .NotBridge2
+
+          ldz MOVING_DIR
+          cpz #DIR_D
+          lbne .NotBlocking
 
           ;on a bridge!
           lda #CHAR_EMPTY
@@ -2572,6 +2701,7 @@ RemoveObject
 SetSpriteValues
           lda #0
           sta SHADOW_VIC_SPRITE_X_EXTEND
+          sta SHADOW_VIC_SPRITE_ENABLE
 
           ldx #0
 -
@@ -2584,11 +2714,14 @@ SetSpriteValues
 
           lda OBJECT_SPRITE,x
           sta SPRITE_POINTER_BASE,y
+          lda BIT_TABLE,x
+          tsb SHADOW_VIC_SPRITE_ENABLE
 
           lda OBJECT_POS_X_EX,x
           beq +
           lda BIT_TABLE,x
           tsb SHADOW_VIC_SPRITE_X_EXTEND
+
 +
 
           ;update sprite pos with scroll offset
@@ -2611,6 +2744,9 @@ SetSpriteValues
 
           lda SHADOW_VIC_SPRITE_X_EXTEND
           sta VIC.SPRITE_X_EXTEND
+
+          lda SHADOW_VIC_SPRITE_ENABLE
+          sta VIC.SPRITE_ENABLE
 
           lda PLAYER_POWERED_UP
           beq +
@@ -2641,6 +2777,8 @@ TYPE_START_SPRITE = * - 1
           !byte SPRITE_ELEVATOR_1 + 4
           !byte SPRITE_BEE_1
           !byte SPRITE_FISH_1
+          !byte SPRITE_DRAGON
+          !byte SPRITE_ANT
 
 ;0 = player
 ;xxxx xxx1 = enemy
@@ -2663,6 +2801,8 @@ TYPE_ENEMY_TYPE = * - 1
           !byte 1     ;bee
           !byte 2     ;fish
           !byte 1     ;eye
+          !byte 2     ;dragon
+          !byte 2     ;ant
 
 TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHPlayer
@@ -2678,6 +2818,8 @@ TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHBee
           !byte <BHFish
           !byte <BHEye
+          !byte <BHDragon
+          !byte <BHAnt
 
 TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHPlayer
@@ -2693,6 +2835,8 @@ TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHBee
           !byte >BHFish
           !byte >BHEye
+          !byte >BHDragon
+          !byte >BHAnt
 
 TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;player
@@ -2708,6 +2852,8 @@ TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;bee
           !byte 0         ;fish
           !byte 0         ;eye
+          !byte 0         ;dragon
+          !byte 0         ;ant
 
 
 TYPE_SPAWN_DELTA_X = * - 1
@@ -2724,6 +2870,8 @@ TYPE_SPAWN_DELTA_X = * - 1
           !byte 0         ;bee
           !byte 4         ;fish
           !byte 0         ;eye
+          !byte 4         ;dragon
+          !byte 4         ;ant
 
 ;offset added onto Y
 TYPE_SPAWN_DELTA_Y = * - 1
@@ -2740,6 +2888,25 @@ TYPE_SPAWN_DELTA_Y = * - 1
           !byte 1         ;bee
           !byte 1         ;fish
           !byte 1         ;eye
+          !byte 3         ;dragon
+          !byte 3         ;ant
+
+TYPE_SPRITE_PALETTE = * - 1
+          !byte 0         ;player
+          !byte 0         ;goomba
+          !byte 0         ;player dying
+          !byte 0         ;flat
+          !byte 1         ;extra
+          !byte 0         ;diamond
+          !byte 0         ;elevator
+          !byte 0         ;crab
+          !byte 0         ;player shot
+          !byte 0         ;deco
+          !byte 0         ;bee
+          !byte 0         ;fish
+          !byte 0         ;eye
+          !byte 0         ;dragon
+          !byte 0         ;ant
 
 FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0   ;player
@@ -2755,6 +2922,8 @@ FLATTENED_ENEMY_SPRITE = * - 1
           !byte SPRITE_BEE_FLAT
           !byte 0         ;fish
           !byte SPRITE_EYE_FLAT
+          !byte 0         ;dragon
+          !byte 0         ;ant
 
 JUMP_TABLE
           !byte 6,6,5,5,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,2,2,1,1,1,0
@@ -2798,6 +2967,8 @@ OBJECT_DIR_Y
 OBJECT_FLAGS
           !fill NUM_OBJECT_SLOTS,0
 OBJECT_STATE
+          !fill NUM_OBJECT_SLOTS,0
+OBJECT_STATE_POS
           !fill NUM_OBJECT_SLOTS,0
 OBJECT_FALL_SPEED
           !fill NUM_OBJECT_SLOTS,0
@@ -2855,6 +3026,9 @@ SECRET_SCREEN_ACTIVE
 
 
 SHADOW_VIC_SPRITE_X_EXTEND
+          !byte 0
+
+SHADOW_VIC_SPRITE_ENABLE
           !byte 0
 
 MOVING_DIR
