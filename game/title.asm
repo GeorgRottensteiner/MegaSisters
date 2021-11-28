@@ -67,6 +67,11 @@ TitleLoop
           sta BUTTON_RELEASED
 
 .KeepGoing
+          jsr .DoScroll
+          jsr .DoScroll
+          jmp TitleLoop
+
+.DoScroll
           lda LEVEL_WIDTH
           ora LEVEL_WIDTH + 1
           bne .NeedToScroll
@@ -77,8 +82,9 @@ TitleLoop
 
 .NeedToScroll
           jsr ScrollBy1Pixel
+          rts
 
-          jmp TitleLoop
+
 
 
 

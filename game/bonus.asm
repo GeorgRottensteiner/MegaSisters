@@ -18,6 +18,12 @@ BonusMode
           cpy #6
           bne -
 
+
+          lda SCREEN_CHAR + 80 + GUI_BONUS_OFFSET * 2
+          sta COLLECTED_DIAMONDS
+          lda SCREEN_CHAR + 80 + ( GUI_BONUS_OFFSET + 1 ) * 2
+          sta COLLECTED_DIAMONDS + 1
+
           lda #0
           sta VIC.SPRITE_ENABLE
           sta VIC.BACKGROUND_COLOR
@@ -47,9 +53,9 @@ BonusMode
           bne -
 
           lda TIME_VALUE_BCD
-          sta SCREEN_CHAR + 11 * 80 + 2 * 80 + 9 * 2
+          sta SCREEN_CHAR + 13 * 80 + BONUS_TIME_OFFSET * 2
           lda TIME_VALUE_BCD + 1
-          sta SCREEN_CHAR + 11 * 80 + 2 * 80 + 10 * 2
+          sta SCREEN_CHAR + 13 * 80 + ( BONUS_TIME_OFFSET + 1 ) * 2
 
           ldx #0
           ldy #0
@@ -120,10 +126,25 @@ BonusLoop
           lda STAGE + 1
           cmp #CHAR_9 + 1
           bne .Overflow
+
           lda #CHAR_0
           sta STAGE + 1
           inc STAGE
 .Overflow
+
+          ;copy score
+          ldx #0
+          ldy #0
+-
+          lda SCREEN_CHAR + 13 * 80 + 2 * BONUS_SCORE_OFFSET,x
+          sta SCORE,y
+
+          inx
+          inx
+          iny
+          cpy #6
+          bne -
+
 
           inc LEVEL_NR
           jmp NextLevel

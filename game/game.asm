@@ -1,6 +1,8 @@
 ﻿NUM_LEVEL_ELEMENTS    = 8
 NUM_DUST_ENTRIES      = 3
 
+BONUS_STAGE_START = 9
+
 !ifdef DISK {
 TILE_DATA = $10000
 }
@@ -59,6 +61,8 @@ Game
           ;init global gameplay vars
           lda #CHAR_0
           sta STAGE
+          sta COLLECTED_DIAMONDS
+          sta COLLECTED_DIAMONDS + 1
           lda #CHAR_0 + 1
           sta STAGE + 1
 
@@ -69,6 +73,7 @@ Game
           lda #0
           sta SECRET_SCREEN_ACTIVE
           sta SECRET_STAGE_LEFT
+          sta BONUS_COUNT
 
 Respawn
           lda #0
@@ -83,14 +88,12 @@ NextLevel
           sta PLAYER_SHOT_ACTIVE
           sta SCROLL_SPEED
           sta SCROLL_SPEED_POS
+          sta PLAYER_PLATFORM
 
           jsr ClearAllObjects
           jsr GetReady
 
           jsr ScreenOff
-          ;set 38 columns with Sideborderwidth
-          ;lda #BORDER_WIDTH
-          ;sta VIC4.SIDBDRWD
 
           lda #CHAR_EMPTY
           jsr ScreenClear32bitAddr
@@ -111,7 +114,6 @@ NextLevel
           jsr PrepareLevelDataPointer
 
           ;find lowest possible place to stand
-
           ldy #24
           sty PARAM2
 -
@@ -136,20 +138,12 @@ NextLevel
           ldx #0
           jsr SpawnObjectInSlot
 
-          lda #( SPRITE_LOCATION / 16384 )
-          sta SPRITE_POINTER_BASE + 1
-          sta SPRITE_POINTER_BASE + 3
-          sta SPRITE_POINTER_BASE + 5
-          sta SPRITE_POINTER_BASE + 7
-          sta SPRITE_POINTER_BASE + 9
-          sta SPRITE_POINTER_BASE + 11
-          sta SPRITE_POINTER_BASE + 13
-          sta SPRITE_POINTER_BASE + 15
-
           ;init timer
           lda #CHAR_9
           sta SCREEN_CHAR + 80 + GUI_TIME_OFFSET * 2
           sta SCREEN_CHAR + 80 + ( GUI_TIME_OFFSET + 1 ) * 2
+          sta TIME_VALUE_BCD
+          sta TIME_VALUE_BCD + 1
           lda #0
           sta TIME_DELAY
           sta JUMP_STEPS_LEFT
@@ -165,6 +159,23 @@ NextLevel
           sta SCREEN_CHAR + 80 + ( GUI_STAGE_OFFSET ) * 2
           lda STAGE + 1
           sta SCREEN_CHAR + 80 + ( GUI_STAGE_OFFSET + 1 ) * 2
+
+          lda COLLECTED_DIAMONDS
+          sta SCREEN_CHAR + 80 + ( GUI_BONUS_OFFSET ) * 2
+          lda COLLECTED_DIAMONDS + 1
+          sta SCREEN_CHAR + 80 + ( GUI_BONUS_OFFSET + 1 ) * 2
+
+          ldx #0
+          ldy #0
+-
+          lda SCORE,y
+          sta SCREEN_CHAR + 80 + GUI_SCORE_OFFSET * 2,x
+
+          inx
+          inx
+          iny
+          cpy #6
+          bne -
 
           jsr ScreenOn
           ;fall through
@@ -720,40 +731,123 @@ HardScroll
           inc CURRENT_MAP_DATA_POS + 1
 +
 
-          ldx #1
-          jsr SpawnObjectStartingWithSlot
-
           lda PARAM3
-          cmp #TYPE_ANT
+          cmp #TYPE_DRAGON
           bne +
 
-          lda #SPRITE_ANT
+
+          ;force dragon at slot 1
+          ldx #1
+          jsr SpawnObjectInSlot
+
+          lda #<SPRITE_DRAGON
           sta OBJECT_SPRITE,x
 
           ;spawn the other 2 parts
           lda #41
           sta PARAM1
-          lda #TYPE_DECO
+          lda #TYPE_DEADLY_DECO
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
-          lda #SPRITE_ANT + 1 * 4
+          lda #<( SPRITE_DRAGON + 1 * 4 )
           sta OBJECT_SPRITE,x
+          lda #>( SPRITE_DRAGON + 1 * 4 )
+          sta OBJECT_SPRITE_HI,x
 
           lda #43
           sta PARAM1
-          lda #TYPE_DECO
+          lda #TYPE_DEADLY_DECO
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
-          lda #SPRITE_ANT + 2 * 4
+          lda #<( SPRITE_DRAGON + 2 * 4 )
           sta OBJECT_SPRITE,x
+          lda #>( SPRITE_DRAGON + 2 * 4 )
+          sta OBJECT_SPRITE_HI,x
+
+          lda #45
+          sta PARAM1
+          lda #TYPE_DEADLY_DECO
+          sta PARAM3
+          inx
+          jsr SpawnObjectInSlot
+          lda #<( SPRITE_DRAGON + 3 * 4 )
+          sta OBJECT_SPRITE,x
+          lda #>( SPRITE_DRAGON + 3 * 4 )
+          sta OBJECT_SPRITE_HI,x
+
+          lda #47
+          sta PARAM1
+          lda #TYPE_DEADLY_DECO
+          sta PARAM3
+          inx
+          jsr SpawnObjectInSlot
+          lda #<( SPRITE_DRAGON + 4 * 4 )
+          sta OBJECT_SPRITE,x
+          lda #>( SPRITE_DRAGON + 4 * 4 )
+          sta OBJECT_SPRITE_HI,x
+
+          txa
+          sec
+          sbc #4
+          sta OBJECT_MAIN_INDEX,x
+          sta OBJECT_MAIN_INDEX - 1,x
+          sta OBJECT_MAIN_INDEX - 2,x
+          sta OBJECT_MAIN_INDEX - 3,x
+
+          jmp .NextLevelDataElement
+
+
++
+          cmp #TYPE_ANT
+          bne +
+
+          ;force ant at slot 1
+          ldx #1
+          jsr SpawnObjectInSlot
+
+          lda #<SPRITE_ANT
+          sta OBJECT_SPRITE,x
+
+          ;spawn the other 2 parts
+          lda #41
+          sta PARAM1
+          lda #TYPE_DEADLY_DECO
+          sta PARAM3
+          inx
+          jsr SpawnObjectInSlot
+          lda #<( SPRITE_ANT + 1 * 4 )
+          sta OBJECT_SPRITE,x
+          lda #>( SPRITE_ANT + 1 * 4 )
+          sta OBJECT_SPRITE_HI,x
+
+          lda #43
+          sta PARAM1
+          lda #TYPE_DEADLY_DECO
+          sta PARAM3
+          inx
+          jsr SpawnObjectInSlot
+          lda #<( SPRITE_ANT + 2 * 4 )
+          sta OBJECT_SPRITE,x
+          lda #>( SPRITE_ANT + 2 * 4 )
+          sta OBJECT_SPRITE_HI,x
+
+          txa
+          sec
+          sbc #2
+          sta OBJECT_MAIN_INDEX,x
+          sta OBJECT_MAIN_INDEX - 1,x
 
           jmp .NextLevelDataElement
 
 +
           cmp #TYPE_ELEVATOR_UP
           bne +
+
+          ;force elevator at slot 1
+          ldx #1
+          jsr SpawnObjectInSlot
 
           ;spawn the other 3 parts
           lda #41
@@ -762,6 +856,8 @@ HardScroll
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
+          lda OBJECT_SPRITE_HI - 1,x
+          sta OBJECT_SPRITE_HI,x
 
           lda #43
           sta PARAM1
@@ -769,6 +865,8 @@ HardScroll
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
+          lda OBJECT_SPRITE_HI - 1,x
+          sta OBJECT_SPRITE_HI,x
 
           lda #45
           sta PARAM1
@@ -777,10 +875,18 @@ HardScroll
           inx
           jsr SpawnObjectInSlot
 
-          lda #SPRITE_ELEVATOR_1 + 2 * 4
+          lda #<( SPRITE_ELEVATOR_1 + 2 * 4 )
           sta OBJECT_SPRITE,x
+          lda #>( SPRITE_ELEVATOR_1 + 2 * 4 )
+          sta OBJECT_SPRITE_HI,x
+          jmp .NextLevelDataElement
 
 +
+
+          ldx #1
+          jsr SpawnObjectStartingWithSlot
+
+
           jmp .NextLevelDataElement
 
 
@@ -1171,6 +1277,14 @@ NextLive
           jmp GameOver
 
 .Respawn
+          ;if in secret stage respawn in parent stage
+          lda SECRET_SCREEN_ACTIVE
+          beq .RegularStage
+
+          lda CURRENT_LEVEL_NR
+          sta LEVEL_NR
+
+.RegularStage
           jmp Respawn
 
 
@@ -1261,7 +1375,7 @@ PrepareLevelDataPointerNoStartScroll
 
           ;screen setup
           lda LEVEL_CONFIG
-          and #$03
+          and #$07
           tay
           lda LEVEL_BACKGROUND_COLOR_INDEX,y
           sta VIC.BACKGROUND_COLOR
@@ -1511,10 +1625,18 @@ TIME_VALUE_BCD
           !byte 0,0
 
 SCORE
-          !fill 6
+          !fill 6,CHAR_0
 
 STAGE
           !byte 0,0
+
+;bonus count display digits
+COLLECTED_DIAMONDS
+          !byte 0,0
+
+;actual bonus count
+BONUS_COUNT
+          !byte 0
 
 PLAYER_IS_DEAD
           !byte 0
@@ -1531,7 +1653,7 @@ PLAYER_SHOT_ACTIVE
 LEVEL_NR
           !byte 0
 
-;xxxx xx11 = level type (00 = overworld, 01 = underground, 02 = water lands, 03 = castle)
+;xxxx x111 = level type (00 = overworld, 01 = underground, 02 = water lands, 03 = castle, 04 = bonus)
 LEVEL_CONFIG
           !byte 0
 
@@ -1542,8 +1664,9 @@ BUTTON_RELEASED
 LEVEL_BACKGROUND_COLOR_INDEX
           !byte 16      ;overworld
           !byte 19      ;underground
-          !byte 16      ;water lands
+          !byte 19      ;water lands
           !byte 19      ;castle
+          !byte 19      ;bonus
 
 ; 2 = first, 1 = second, 0 = done
 DUST_POS
@@ -1570,11 +1693,11 @@ OUTER_LEVEL_CURRENT_WIDTH
 ;map from level no to bonus map
 LEVEL_BONUS
           !byte 0 ;title
-          !byte 4 ; 0
+          !byte BONUS_STAGE_START + 0
           !byte 0
           !byte 0
           !byte 0
-          !byte 0
+          !byte BONUS_STAGE_START + 1
           !byte 0
           !byte 0
           !byte 0

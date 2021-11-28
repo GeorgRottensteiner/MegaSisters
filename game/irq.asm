@@ -27,7 +27,6 @@ IRQMusic
           jsr MUSIC_PLAYER + 3
           jsr SFXUpdate
 
-
           ;ACK IRQs
           lda #$01
           sta VIC.IRQ_REQUEST

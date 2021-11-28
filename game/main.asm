@@ -131,17 +131,6 @@ ENTRY_POINT
           lda #$80
           sta VIC4.SPRPTR16
 
-          ;set all hi bytes
-          lda #( SPRITE_LOCATION / 16384 )
-          sta SPRITE_POINTER_BASE + 1
-          sta SPRITE_POINTER_BASE + 3
-          sta SPRITE_POINTER_BASE + 5
-          sta SPRITE_POINTER_BASE + 7
-          sta SPRITE_POINTER_BASE + 9
-          sta SPRITE_POINTER_BASE + 11
-          sta SPRITE_POINTER_BASE + 13
-          sta SPRITE_POINTER_BASE + 15
-
           jsr SetPalette
 
           jmp Title
@@ -210,7 +199,6 @@ SetPalette
 
 !source "game.asm"
 !source "bonus.asm"
-!source "stages.asm"
 !source "gameover.asm"
 !source "title.asm"
 !source "sfxplay.asm"
@@ -231,6 +219,8 @@ GUI_BAR
 
 * = MUSIC_PLAYER
 !bin "everlasting.prg",,2
+
+!source "stages.asm"
 
 PALETTE_DATA_SPRITES
           !media "megasisters.spriteproject",PALETTESWIZZLED,0,32

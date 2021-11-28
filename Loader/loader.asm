@@ -4,7 +4,7 @@
 !source <mega65.asm>
 
 NUM_CHARS = 244
-NUM_SPRITES = 72
+NUM_SPRITES = 85
 
 LOAD_CODE_LOCATION  = $0400
 
@@ -207,4 +207,4 @@ HEX_CHARS
           }
 
 
-
+!fill 256, 120 + 15.5*math.sin(i*(3*360)/256)

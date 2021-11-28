@@ -138,6 +138,27 @@ DecreaseValue
 
 
 
+!zone IncreaseValueByA
+;x = index in on screen counter
+;ZEROPAGE_POINTER_5 = pointer to screen
+;a = value to add
+IncreaseValueByA
+          sta .DecCount
+-
+          dec .DecCount
+
+          phx
+          jsr IncreaseValue
+          plx
+
+.DecCount = * + 1
+          lda #$ff
+          bne -
+
+          rts
+
+
+
 !zone IncreaseValue
 ;x = index in on screen counter
 ;ZEROPAGE_POINTER_5 = pointer to screen
@@ -150,11 +171,11 @@ IncreaseValue
           cmp #CHAR_9
           bne +
 
-          cpx #0
-          beq .Done
-
           lda #CHAR_0
           sta (ZEROPAGE_POINTER_5),y
+
+          cpx #0
+          beq .Done
 
           dey
           dey
