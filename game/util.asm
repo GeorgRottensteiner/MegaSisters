@@ -33,7 +33,14 @@ GenerateRandomNumber
 
 
 !zone ScreenClear32bitAddr
+;a = clear char (lo byte)
 ScreenClear32bitAddr
+          ldx #>( CHARSET_LOCATION / 64 )
+          stx PARAM2
+
+;a = clear char (lo byte)
+;PARAM2 = clear char (hi byte)
+ScreenClear32bitAddrWithAlternativeHiByte
           sta PARAM1
           ldx #7
 
@@ -67,7 +74,7 @@ ScreenClear32bitAddr
 
           ;hi byte
           ;force chars to $100!
-          lda #$04 ; TILE_DATA / 64 ; $01
+          lda PARAM2
           sta [ZP.Screen], z
           lda #0
           sta [ZP.Color], z
@@ -93,7 +100,7 @@ ScreenClear32bitAddr
 
           ;hi byte
           ;force chars to $100!
-          lda #$04 ; $01
+          lda PARAM2
           sta [ZP.Screen], z
           lda #0
           sta [ZP.Color], z

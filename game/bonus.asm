@@ -146,6 +146,13 @@ BonusLoop
           bne -
 
 
+          lda LEVEL_NR
+          cmp #BONUS_STAGE_START - 1
+          bne .NotCompleted
+
+          jmp CompletedGame
+
+.NotCompleted
           inc LEVEL_NR
           jmp NextLevel
 

@@ -1,7 +1,10 @@
-!zone GameOver
+﻿!zone GameOver
 GameOver
           lda #252
           jsr WaitFrame
+
+          lda #1
+          jsr MUSIC_PLAYER
 
           lda #80
           sta VIC4.CHARSTEP_LO
@@ -34,7 +37,7 @@ GameOver
           cpx #40
           bne -
 
-          lda #180
+          lda #240
           sta GAME_OVER_DELAY
 
           lda #0
@@ -66,6 +69,10 @@ GameOverLoop
 .Abort
           lda #0
           sta BUTTON_RELEASED
+
+          lda #0
+          jsr MUSIC_PLAYER
+
           jmp Title
 
 

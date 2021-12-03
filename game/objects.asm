@@ -2,22 +2,24 @@
 
 SPRITE_BASE = ( SPRITE_LOCATION ) / 64
 
-SPRITE_PLAYER_RUN_R_1   = SPRITE_BASE + 0 * 4
-SPRITE_PLAYER_RUN_R_2   = SPRITE_BASE + 1 * 4
-SPRITE_PLAYER_JUMP_R    = SPRITE_BASE + 2 * 4
-SPRITE_PLAYER_FALL_R    = SPRITE_BASE + 3 * 4
-SPRITE_PLAYER_DIE_R     = SPRITE_BASE + 4 * 4
-SPRITE_PLAYER_RUN_L_1   = SPRITE_BASE + 5 * 4
-SPRITE_PLAYER_RUN_L_2   = SPRITE_BASE + 6 * 4
-SPRITE_PLAYER_JUMP_L    = SPRITE_BASE + 7 * 4
-SPRITE_PLAYER_FALL_L    = SPRITE_BASE + 8 * 4
+SPRITE_PLAYER_IDLE_R    = SPRITE_BASE + 92 * 4
+SPRITE_PLAYER_RUN_R_1   = SPRITE_BASE + 95 * 4
+SPRITE_PLAYER_RUN_R_2   = SPRITE_BASE + 96 * 4
+SPRITE_PLAYER_JUMP_R    = SPRITE_BASE + 100 * 4
+SPRITE_PLAYER_FALL_R    = SPRITE_BASE + 101 * 4
+SPRITE_PLAYER_DIE_R     = SPRITE_BASE + 114 * 4
+SPRITE_PLAYER_IDLE_L    = SPRITE_BASE + 103 * 4
+SPRITE_PLAYER_RUN_L_1   = SPRITE_BASE + 106 * 4
+SPRITE_PLAYER_RUN_L_2   = SPRITE_BASE + 107 * 4
+SPRITE_PLAYER_JUMP_L    = SPRITE_BASE + 111 * 4
+SPRITE_PLAYER_FALL_L    = SPRITE_BASE + 112 * 4
 SPRITE_GOOMBA_1         = SPRITE_BASE + 10 * 4
 SPRITE_GOOMBA_FLAT      = SPRITE_BASE + 12 * 4
-SPRITE_EXTRA            = SPRITE_BASE + 13 * 4
+SPRITE_EXTRA            = SPRITE_BASE + 2 * 4
 SPRITE_DIAMOND          = SPRITE_BASE + 16 * 4
 SPRITE_ELEVATOR_1       = SPRITE_BASE + 27 * 4
 
-SPRITE_PLAYER_RUN_R_1_EX = SPRITE_BASE + 17 * 4
+SPRITE_PLAYER_RUN_R_1_EX = SPRITE_BASE + 118 * 4 ;SPRITE_BASE + 17 * 4
 
 SPRITE_CRAB_R           = SPRITE_BASE + 30 * 4
 SPRITE_CRAB_L           = SPRITE_BASE + 32 * 4
@@ -34,6 +36,7 @@ SPRITE_FISH_1           = SPRITE_BASE + 41 * 4
 
 SPRITE_EYE_1            = SPRITE_BASE + 45 * 4
 SPRITE_EYE_FLAT         = SPRITE_BASE + 47 * 4
+SPRITE_EYE_1_R          = SPRITE_BASE + 90 * 4
 
 SPRITE_DRAGON           = SPRITE_BASE + 57 * 4
 SPRITE_ANT              = SPRITE_BASE + 48 * 4
@@ -43,6 +46,12 @@ SPRITE_EXTRA_FLASH_DOUBLE   = SPRITE_BASE + 76 * 4
 
 SPRITE_ANT_DEAD_1       = SPRITE_BASE + 77 * 4
 SPRITE_DRAGON_DEAD_1    = SPRITE_BASE + 80 * 4
+
+SPRITE_EXPLOSION        = SPRITE_BASE + 85 * 4
+
+SPRITE_CLOWN            = SPRITE_BASE + 86 * 4
+
+SPRITE_CRYSTAL          = SPRITE_BASE + 0 * 4
 
 OBJECT_HEIGHT           = 8 * 2
 
@@ -64,6 +73,9 @@ TYPE_DRAGON       = 14
 TYPE_ANT          = 15
 TYPE_PLATFORM     = 16
 TYPE_DEADLY_DECO  = 17    ;boss parts
+TYPE_EXPLOSION    = 18
+TYPE_CLOWN        = 19
+TYPE_CRYSTAL      = 20
 
 EXTRA_POWERUP       = 0
 EXTRA_SHOT          = 1
@@ -210,9 +222,6 @@ SpawnObjectInSlot
           adc OBJECT_POS_Y,x
           sta OBJECT_POS_Y,x
 
-          ;lda OBJECT_COLOR,x
-          ;sta VIC.SPRITE_COLOR,x
-
           lda TYPE_START_SPRITE_FLAGS,y
           bit #SF_DIR_R
           beq +
@@ -276,9 +285,9 @@ SpawnObjectInSlot
 -
           lda PALETTE_DATA_SPRITES, y
           sta VIC4.PALRED,x
-          lda PALETTE_DATA_SPRITES + 1 * 32, y
+          lda PALETTE_DATA_SPRITES + 1 * 16 * NUM_SPRITE_PALETTES, y
           sta VIC4.PALGREEN,x
-          lda PALETTE_DATA_SPRITES + 2 * 32, y
+          lda PALETTE_DATA_SPRITES + 2 * 16 * NUM_SPRITE_PALETTES, y
           sta VIC4.PALBLUE,x
 
           inx
@@ -342,6 +351,8 @@ CalcSpritePosFromCharPos
           ;adc #( 50 - SPRITE_CENTER_OFFSET_Y )
           ;adc #( 37 - SPRITE_CENTER_OFFSET_Y )
           adc #( 50 - SPRITE_CENTER_OFFSET_Y )
+          sec
+          sbc #2
           sta OBJECT_POS_Y,x
           ;sta VIC_SPRITE_Y_POS,y
 
@@ -435,8 +446,8 @@ BHDyingObject
 
 
 .FallDone
-          lda OBJECT_POS_Y,x
-          cmp #250
+          lda OBJECT_CHAR_POS_Y,x
+          cmp #26
           bcc .NotDoneYet
 
           jmp RemoveObject
@@ -500,9 +511,9 @@ BHPlayer
           lda #1
           sta PLAYER_SHOT_ACTIVE
 
+.NoShotSpawned
           ldx CURRENT_INDEX
 
-.NoShotSpawned
 .NotFire
           lda #JOY_RIGHT
           bit JOY_VALUE
@@ -629,7 +640,7 @@ BHPlayer
           beq .FallAnim
 
           lda OBJECT_MOVE_SPEED_X,x
-          beq .NoAnimUpdate
+          beq .IdleAnim
 
           inc OBJECT_ANIM_DELAY,x
           lda OBJECT_ANIM_DELAY,x
@@ -637,8 +648,9 @@ BHPlayer
           bne +
 
           ldy OBJECT_DIR,x
-          lda #$01
-          eor OBJECT_ANIM_POS,x
+          inc OBJECT_ANIM_POS,x
+          lda OBJECT_ANIM_POS,x
+          and #$03
           sta OBJECT_ANIM_POS,x
 
           asl
@@ -648,11 +660,39 @@ BHPlayer
           sta OBJECT_SPRITE,x
 
 +
-.NoAnimUpdate
           jmp .AnimDone
+
+
+.IdleAnim
+          inc OBJECT_ANIM_DELAY,x
+          lda OBJECT_ANIM_DELAY,x
+          and #$07
+          bne +
+
+          inc OBJECT_ANIM_POS,x
+          lda OBJECT_ANIM_POS,x
+          and #$03
+          sta OBJECT_ANIM_POS,x
+          tay
+          lda PING_PONG_TABLE,y
+
+          asl
+          asl
+          clc
+          ldy OBJECT_DIR,x
+          adc PLAYER_SPRITES_IDLE,y
+          sta OBJECT_SPRITE,x
++
+          jmp .AnimDone
+
+
 
 .MOVE_DELTA
           !byte 0
+
+PLAYER_SPRITES_IDLE
+          !byte <SPRITE_PLAYER_IDLE_R
+          !byte <SPRITE_PLAYER_IDLE_L
 
 PLAYER_SPRITES
           !byte <SPRITE_PLAYER_RUN_R_1
@@ -800,6 +840,16 @@ BHPlayerShot
           ldy CURRENT_INDEX
           jsr CheckCollisions
 
+          ;was the shot destroyed?
+          ldx CURRENT_INDEX
+          lda OBJECT_ACTIVE,x
+          cmp #TYPE_PLAYER_SHOT
+          beq +
+
+          rts
+
++
+
           lda #3
           sta PARAM2
 
@@ -870,7 +920,8 @@ BHPlayerShot
 .RemoveShot
           lda #0
           sta PLAYER_SHOT_ACTIVE
-          jmp RemoveObject
+
+          jmp ExplodeObject
 
 
 
@@ -1016,6 +1067,77 @@ PING_PONG_TABLE
           !byte 0,1,2,1
 
 
+
+!zone BHClown
+BHClown
+          ldy OBJECT_DIR_Y,x
+          lda FISH_DELTA,y
+          beq .UpdateTablePointer
+          sta PARAM2
+          bpl .GoUp
+
+          lda #$00
+          sec
+          sbc PARAM2
+          lsr
+          beq .UpdateTablePointer
+          sta PARAM2
+
+          lda #<( SPRITE_CLOWN + 3 * 4 )
+          sta OBJECT_SPRITE,x
+
+
+-
+          jsr ObjectMoveDown
+
+          dec PARAM2
+          bne -
+
+.UpdateTablePointer
+          inc OBJECT_DIR_Y,x
+          lda OBJECT_DIR_Y,x
+          cmp #36
+          bne +
+
+          lda #0
+          sta OBJECT_DIR_Y,x
+
++
+          rts
+
+
+.GoUp
+          inc OBJECT_ANIM_DELAY,x
+          lda OBJECT_ANIM_DELAY,x
+          and #$03
+          bne +
+
+          inc OBJECT_ANIM_POS,x
+          lda OBJECT_ANIM_POS,x
+          and #$03
+          tay
+          lda PING_PONG_TABLE,y
+          asl
+          asl
+          clc
+          adc #<SPRITE_CLOWN
+          sta OBJECT_SPRITE,x
+
+
++
+
+          lsr PARAM2
+          beq .UpdateTablePointer
+
+-
+          jsr ObjectMoveUp
+
+          dec PARAM2
+          bne -
+
+          bra .UpdateTablePointer
+
+
 !zone BHCrab
 BHCrab
           jsr HandleObjectFall
@@ -1051,6 +1173,20 @@ CRAB_SPRITE
 
 
 
+!zone BHExplosion
+BHExplosion
+          inc OBJECT_ANIM_DELAY,x
+          lda OBJECT_ANIM_DELAY,x
+          cmp #4
+          bne +
+          and #$04
+
+          jmp RemoveObject
++
+          rts
+
+
+
 !zone BHEye
 BHEye
           jsr HandleObjectFall
@@ -1079,17 +1215,200 @@ BHEye
           clc
           adc EYE_SPRITE,y
           sta OBJECT_SPRITE,x
+          lda EYE_SPRITE_HI,y
+          sta OBJECT_SPRITE_HI,x
           rts
 
 EYE_SPRITE
-          !byte <SPRITE_EYE_1, <SPRITE_EYE_1
+          !byte <SPRITE_EYE_1, <SPRITE_EYE_1_R
+EYE_SPRITE_HI
+          !byte >SPRITE_EYE_1, >SPRITE_EYE_1_R
 
 
 
 !zone BHDragon
 BHDragon
+          inc OBJECT_ANIM_DELAY,x
+          lda OBJECT_ANIM_DELAY,x
+          and #$03
+          lbne .WaitDone
+
+          inc OBJECT_ANIM_POS,x
+          lda OBJECT_ANIM_POS,x
+          and #$03
+          tay
+          lda PING_PONG_TABLE,y
+          ;* 5
+          sta PARAM1
+          asl
+          asl
+          clc
+          adc PARAM1
+          ;* 4 for sprite offset
+          asl
+          asl
+          sta PARAM1
+          clc
+          adc #<SPRITE_DRAGON
+          sta OBJECT_SPRITE,x
+
+          lda #>SPRITE_DRAGON
+          adc #0
+          sta OBJECT_SPRITE_HI,x
+-
+          lda OBJECT_SPRITE,x
+          clc
+          adc #4
+          sta OBJECT_SPRITE + 1,x
+          lda OBJECT_SPRITE_HI,x
+          adc #0
+          sta OBJECT_SPRITE_HI + 1,x
+
+          inx
+          cpx #5
+          bne -
+
+          ldx CURRENT_INDEX
+
+          jsr DragonMove
+
+DragonMove
+          lda OBJECT_STATE_POS,x
+          bne .HandleStep
+
+          ;find next action
+          ;000x xxxx = pause
+          ;001x xxxx = left
+          ;010x xxxx = right
+          ;011x xxxx = end
+          ;1xxx xxxx = double speed
+          ldy OBJECT_STATE,x
+          lda DRAGON_MOVE_TABLE,y
+          and #$e0
+          cmp #$60
+          bne +
+
+          ;end marker, restart sequence
+          lda #0
+          sta OBJECT_STATE,x
+          tay
+          lda DRAGON_MOVE_TABLE,y
++
+          and #$e0
+          sta OBJECT_MOVE_SPEED_X,x
+          lda DRAGON_MOVE_TABLE,y
+          and #$1f
+          sta OBJECT_STATE_POS,x
+
+          inc OBJECT_STATE,x
+
+.HandleStep
+          dec OBJECT_STATE_POS,x
+
+          lda OBJECT_MOVE_SPEED_X,x
+          lbeq .WaitDone
+          cmp #$a0
+          beq .Down
+          cmp #$80
+          beq .Up
+          cmp #$20
+          bne +
+
+          jsr ObjectMoveLeft
+          inx
+          jsr ObjectMoveLeft
+          inx
+          jsr ObjectMoveLeft
+          inx
+          jsr ObjectMoveLeft
+          inx
+          jsr ObjectMoveLeft
+          dex
+          dex
+          dex
+          dex
           rts
 
++
+          ;right option is left
+          jsr ObjectMoveRight
+          inx
+          jsr ObjectMoveRight
+          inx
+          jsr ObjectMoveRight
+          inx
+          jsr ObjectMoveRight
+          inx
+          jsr ObjectMoveRight
+          dex
+          dex
+          dex
+          dex
+
+
+.WaitDone
+          rts
+
+.Up
+          jsr ObjectMoveUp
+          inx
+          jsr ObjectMoveUp
+          inx
+          jsr ObjectMoveUp
+          inx
+          jsr ObjectMoveUp
+          inx
+          jsr ObjectMoveUp
+          dex
+          dex
+          dex
+          dex
+          rts
+
+.Down
+          jsr ObjectMoveDown
+          inx
+          jsr ObjectMoveDown
+          inx
+          jsr ObjectMoveDown
+          inx
+          jsr ObjectMoveDown
+          inx
+          jsr ObjectMoveDown
+          dex
+          dex
+          dex
+          dex
+          rts
+
+;000x xxxx = pause
+;001x xxxx = left
+;010x xxxx = right
+;011x xxxx = end
+;100x xxxx = up
+;101x xxxx = down
+DRAGON_MOVE_TABLE
+          !byte $80 | $1f   ;up
+          !byte $1f
+          !byte $a0 | $1f   ;down
+
+          !byte $1f   ;!byte 0,40
+          !byte $20 | $1f   ;!byte 1,40
+          !byte $0f   ; !byte 0,20
+          !byte $40 | $1f   ; !byte 2,40
+
+          !byte $2f   ;  1,20
+          !byte $03   ; 0,20
+          !byte $4f   ; 2,20
+          !byte $0f   ; 0,20
+          !byte $20 | $1f
+          !byte $20 | $1f
+          !byte $40 | $1f
+          !byte $40 | $1f
+          !byte $80 | $1f   ;up
+          !byte $1f
+          !byte $a0 | $1f   ;down
+          !byte $60
 
 
 !zone BHPlatform
@@ -1197,7 +1516,7 @@ IsPlayerStandingOnPlatform
 
           lda OBJECT_POS_Y
           clc
-          adc #16
+          adc #21
           cmp OBJECT_POS_Y,x
           bne .PlayerNotOnBoard
 
@@ -1398,11 +1717,30 @@ BHExtra
           cmp #EXTRA_POWERUP
           bne .NoAnim
 
+          lda OBJECT_DIR,x
+          bne .Inc
+
+          lda OBJECT_ANIM_DELAY,x
+          bne +
+
+          lda #8 * 4
+          sta OBJECT_ANIM_DELAY,x
+
++
+          dec OBJECT_ANIM_DELAY,x
+          jmp +
+
+
+
+
+
+.Inc
           inc OBJECT_ANIM_DELAY,x
++
           lda OBJECT_ANIM_DELAY,x
           lsr
           lsr
-          cmp #$3
+          cmp #$8
           bne +
 
           lda #0
@@ -1424,9 +1762,13 @@ BHDiamond
           and #OF_JUMPING
           beq .NotJumping
 
+          lda OBJECT_CHAR_POS_Y,x
+          bmi .OutsideTop
+
           jmp HandleObjectJump
 
 .NotJumping
+.OutsideTop
           jmp RemoveObject
 
 
@@ -1498,8 +1840,9 @@ BHElevator
 
         lda OBJECT_POS_Y
         clc
-        adc #16
+        adc #21
         cmp OBJECT_POS_Y,x
+
         bne .PlayerNotOnBoard
 
         lda OBJECT_CHAR_POS_X,x
@@ -1700,14 +2043,23 @@ CheckCollisions
           sta PLAYER_SHOT_ACTIVE
 
           ;remove shot
-          jmp RemoveObject
+ExplodeObject
+          lda #TYPE_EXPLOSION
+          sta OBJECT_ACTIVE,x
+
+          lda #<SPRITE_EXPLOSION
+          sta OBJECT_SPRITE,x
+          lda #>SPRITE_EXPLOSION
+          sta OBJECT_SPRITE_HI,x
+          rts
 
 .KillEnemyWithShot
           lda #0
           sta PLAYER_SHOT_ACTIVE
 
           ;remove shot
-          jsr RemoveObject
+          ldx CURRENT_INDEX
+          jsr ExplodeObject
 
           ;hurt enemy
           ldy CURRENT_SUB_INDEX
@@ -1808,6 +2160,16 @@ CheckCollisions
 
 .Pickup
           ldx CURRENT_SUB_INDEX
+          lda OBJECT_ACTIVE,x
+          cmp #TYPE_EXTRA
+          beq .PickExtra
+
+          ;the final crystal
+          lda #1
+          sta REACHED_EXIT
+          jmp .NextObject
+
+.PickExtra
           lda OBJECT_VALUE,x
           inc
           sta PLAYER_POWERED_UP
@@ -1846,6 +2208,8 @@ FlattenEnemy
           ldy OBJECT_ACTIVE,x
           lda FLATTENED_ENEMY_SPRITE,y
           sta OBJECT_SPRITE,x
+          lda FLATTENED_ENEMY_SPRITE_HI,y
+          sta OBJECT_SPRITE_HI,x
           lda #TYPE_FLAT
           sta OBJECT_ACTIVE,x
 
@@ -2445,9 +2809,20 @@ SpawnExtra
           jsr SpawnObjectStartingWithSlot
 
           ;player powered up state matches next power up
+
+          ;max out at bouncing shot
+          lda PLAYER_POWERED_UP
+          cmp #3
+          bne +
+
+          lda #2
+          sta OBJECT_VALUE,x
+          jmp ++
++
+
           lda PLAYER_POWERED_UP
           sta OBJECT_VALUE,x
-
+++
           tay
           lda POWER_UP_SPRITE,y
           sta OBJECT_SPRITE,x
@@ -3189,8 +3564,11 @@ SetSpriteValues
 
           lda SPRITE_POINTER_BASE
           clc
-          adc #SPRITE_PLAYER_RUN_R_1_EX - SPRITE_PLAYER_RUN_R_1
+          adc #<( SPRITE_PLAYER_RUN_R_1_EX - SPRITE_PLAYER_RUN_R_1 )
           sta SPRITE_POINTER_BASE
+          lda SPRITE_POINTER_BASE + 1
+          adc #>( SPRITE_PLAYER_RUN_R_1_EX - SPRITE_PLAYER_RUN_R_1 )
+          sta SPRITE_POINTER_BASE + 1
 
 +
 
@@ -3215,6 +3593,9 @@ TYPE_START_SPRITE = * - 1
           !byte <SPRITE_ANT
           !byte <SPRITE_PLATFORM
           !byte <SPRITE_ANT
+          !byte <SPRITE_EXPLOSION
+          !byte <SPRITE_CLOWN
+          !byte <SPRITE_CRYSTAL
 
 TYPE_START_SPRITE_HI = * - 1
           !byte >SPRITE_PLAYER_RUN_R_1
@@ -3234,6 +3615,9 @@ TYPE_START_SPRITE_HI = * - 1
           !byte >SPRITE_ANT
           !byte >SPRITE_PLATFORM
           !byte >SPRITE_ANT
+          !byte >SPRITE_EXPLOSION
+          !byte >SPRITE_CLOWN
+          !byte >SPRITE_CRYSTAL
 
 ;0 = player
 ;xxxx xxx1 = enemy
@@ -3270,6 +3654,9 @@ TYPE_ENEMY_TYPE_FLAGS = * - 1
           !byte ETF_DEADLY | ETF_SHOOTABLE     ;ant
           !byte ETF_FLOATING_PLATFORM     ;platform
           !byte ETF_DEADLY ;deadly deco
+          !byte 0     ;explosion
+          !byte ETF_DEADLY     ;clown
+          !byte ETF_EXTRA     ;crystal
 
 TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHPlayer
@@ -3288,6 +3675,9 @@ TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHDragon
           !byte <BHAnt
           !byte <BHPlatform
+          !byte <BHNone
+          !byte <BHExplosion
+          !byte <BHClown
           !byte <BHNone
 
 TYPE_BEHAVIOUR_HI = * - 1
@@ -3308,6 +3698,9 @@ TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHAnt
           !byte >BHPlatform
           !byte >BHNone
+          !byte >BHExplosion
+          !byte >BHClown
+          !byte >BHNone
 
 TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;player
@@ -3327,6 +3720,9 @@ TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;ant
           !byte 0         ;platform
           !byte 0         ;deadly deco
+          !byte 0         ;explosion
+          !byte 0         ;clown
+          !byte 0         ;crystal
 
 
 TYPE_SPAWN_DELTA_X = * - 1
@@ -3347,31 +3743,37 @@ TYPE_SPAWN_DELTA_X = * - 1
           !byte 4         ;ant
           !byte 4         ;platform
           !byte 4         ;deadly deco
+          !byte 0         ;explosion
+          !byte 0         ;clown
+          !byte 0         ;crystal
 
 ;offset added onto Y
 TYPE_SPAWN_DELTA_Y = * - 1
-          !byte 3         ;player
-          !byte 1         ;goomba
+          !byte 0         ;player
+          !byte 3         ;goomba
           !byte 0         ;player dying
           !byte 0         ;flat
           !byte 0         ;extra
           !byte 0         ;diamond
-          !byte 3         ;elevator
-          !byte 0         ;crab
+          !byte 5         ;elevator
+          !byte 3         ;crab
           !byte 0         ;player shot
-          !byte 3         ;deco
+          !byte 5         ;deco
           !byte 1         ;bee
           !byte 1         ;fish
           !byte 1         ;eye
-          !byte 3         ;dragon
-          !byte 3         ;ant
-          !byte 3         ;platform
-          !byte 3         ;deadly deco
+          !byte 5         ;dragon
+          !byte 5         ;ant
+          !byte 5         ;platform
+          !byte 5         ;deadly deco
+          !byte 0         ;explosion
+          !byte 0         ;clown
+          !byte 0         ;crystal
 
 TYPE_SPRITE_PALETTE = * - 1
-          !byte 0         ;player
+          !byte 3         ;player
           !byte 0         ;goomba
-          !byte 0         ;player dying
+          !byte 3         ;player dying
           !byte 0         ;flat
           !byte 1         ;extra
           !byte 0         ;diamond
@@ -3386,6 +3788,9 @@ TYPE_SPRITE_PALETTE = * - 1
           !byte 0         ;ant
           !byte 0         ;platform
           !byte 0         ;deadly deco
+          !byte 0         ;explosion
+          !byte 2         ;clown
+          !byte 4         ;crystal
 
 FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0   ;player
@@ -3405,6 +3810,31 @@ FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0         ;ant
           !byte 0         ;platform
           !byte 0         ;deadly deco
+          !byte 0         ;explosion
+          !byte 0         ;clown
+          !byte 0         ;crystal
+
+FLATTENED_ENEMY_SPRITE_HI = * - 1
+          !byte 0   ;player
+          !byte >SPRITE_GOOMBA_FLAT
+          !byte 0   ;player dying
+          !byte 0   ;flat
+          !byte 0         ;extra
+          !byte 0         ;diamond
+          !byte 0         ;elevator
+          !byte >SPRITE_CRAB_FLAT
+          !byte 0         ;player shot
+          !byte 0         ;deco
+          !byte >SPRITE_BEE_FLAT
+          !byte 0         ;fish
+          !byte >SPRITE_EYE_FLAT
+          !byte 0         ;dragon
+          !byte 0         ;ant
+          !byte 0         ;platform
+          !byte 0         ;deadly deco
+          !byte 0         ;explosion
+          !byte 0         ;clown
+          !byte 0         ;crystal
 
 TYPE_START_HP = * - 1
           !byte 0   ;player
@@ -3424,6 +3854,9 @@ TYPE_START_HP = * - 1
           !byte 20        ;ant
           !byte 0         ;platform
           !byte 0         ;deadly deco
+          !byte 0         ;explosion
+          !byte 0         ;clown
+          !byte 0         ;crystal
 
 JUMP_TABLE
           !byte 6,6,5,5,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,2,2,1,1,1,0

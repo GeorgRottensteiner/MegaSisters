@@ -3,7 +3,12 @@
 !source <c64.asm>
 !source <mega65.asm>
 
+;CHEATS_ENABLED
+
 BORDER_WIDTH = $58    ;38 column border width
+
+CHARSET_LOCATION      = $10000
+;LOGO_CHARSET_LOCATION = $20000
 
 SCREEN_CHAR = $0800
 SCREEN_COLOR = $d800
@@ -12,6 +17,8 @@ MUSIC_PLAYER = $4000
 
 NUM_SPRITES = 38
 NUM_CHARS   = 245
+
+NUM_SPRITE_PALETTES = 5
 
 PARAM1    = $67
 PARAM2    = $68
@@ -53,7 +60,7 @@ LDF_PREV_ELEMENT_AREA = $e0   ;y repeat MSB means previous element
 SPRITE_POINTER_BASE   = $ff0
 
 !ifdef DISK {
-SPRITE_LOCATION = $18000
+SPRITE_LOCATION = $14000
 } else {
 SPRITE_LOCATION = SPRITE_DATA ;$e000
 }
@@ -102,6 +109,10 @@ ENTRY_POINT
 
           cli
 
+          lda #0
+          sta VIC.BORDER_COLOR
+
+          lda #0
           jsr MUSIC_PLAYER
 
           jsr InitIrq
@@ -133,7 +144,8 @@ ENTRY_POINT
 
           jsr SetPalette
 
-          jmp Title
+          jmp Credits
+          ;jmp Title
 
 
 
@@ -206,6 +218,8 @@ SetPalette
 !source "debugout.asm"
 !source "util.asm"
 !source "irq.asm"
+!source "completed.asm"
+!source "credits.asm"
 
 PALETTE_DATA
           !media "game.charsetproject",PALETTESWIZZLED,0,32
@@ -217,13 +231,16 @@ GUI_BAR
           !media "gui.charscreen",CHAR
 
 
+
 * = MUSIC_PLAYER
-!bin "everlasting.prg",,2
+;!bin "everlasting.prg",,2
+!bin "MSI-Mega_Giana_Sisters.sid",,$7e
+
 
 !source "stages.asm"
 
 PALETTE_DATA_SPRITES
-          !media "megasisters.spriteproject",PALETTESWIZZLED,0,32
+          !media "megasisters.spriteproject",PALETTESWIZZLED,0,NUM_SPRITE_PALETTES * 16
 
 
 !source "objects.asm"
@@ -237,5 +254,12 @@ TILE_DATA
 SPRITE_DATA
           !media "megasisters.spriteproject",SPRITEOPTIMIZE,0,NUM_SPRITES
 }
+
+
+!realign 64
+LOGO_CHARSET_LOCATION
+LOGO_CHARSET_SOURCE
+          !media "../game/logo.charsetproject",CHAR,0,192
+LOGO_CHARSET_END
 
 

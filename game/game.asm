@@ -1,7 +1,7 @@
 ﻿NUM_LEVEL_ELEMENTS    = 8
 NUM_DUST_ENTRIES      = 3
 
-BONUS_STAGE_START = 9
+BONUS_STAGE_START = 18
 
 !ifdef DISK {
 TILE_DATA = $10000
@@ -329,12 +329,28 @@ GameLoop
 
 +
 
+!ifdef CHEATS_ENABLED {
           lda Mega65.PRESSED_KEY
           beq .NoKey
 
           ldx #0
           stx Mega65.PRESSED_KEY
 
+          cmp #'d'
+          lbeq Debug
+
+          cmp #'b'
+          bne +
+
+
+          ;jump to last level
+          lda #BONUS_STAGE_START - 2
+          sta LEVEL_NR
+          lda #1
+          sta REACHED_EXIT
+          jmp .NoKey
+
++
           cmp #'a'
           bne +
 
@@ -343,12 +359,8 @@ GameLoop
 
 +
 
-          ;lda #1
-          ;sta REACHED_EXIT
-          ;jsr ScrollBy1Pixel
-
 .NoKey
-
+}
 
           lda #0
           jsr WaitFrame
@@ -800,6 +812,39 @@ HardScroll
 
 
 +
+          cmp #TYPE_CRYSTAL
+          bne +
+
+          ;force at slot 6
+          ldx #6
+          jsr SpawnObjectInSlot
+
+          lda #<SPRITE_CRYSTAL
+          sta OBJECT_SPRITE,x
+
+          ;spawn the other part
+          inc PARAM2
+          inc PARAM2
+          inc PARAM2
+          inx
+          jsr SpawnObjectInSlot
+          lda #<( SPRITE_CRYSTAL + 1 * 4 )
+          sta OBJECT_SPRITE,x
+          lda #>( SPRITE_CRYSTAL + 1 * 4 )
+          sta OBJECT_SPRITE_HI,x
+
+          jsr ObjectMoveUp
+          jsr ObjectMoveUp
+          jsr ObjectMoveUp
+
+          txa
+          dec
+          sta OBJECT_MAIN_INDEX,x
+
+          jmp .NextLevelDataElement
+
++
+
           cmp #TYPE_ANT
           bne +
 
@@ -1285,6 +1330,25 @@ NextLive
           sta LEVEL_NR
 
 .RegularStage
+          ;store bonus and score for respawn
+          ldx #0
+          ldy #0
+-
+          lda SCREEN_CHAR + 80 + GUI_SCORE_OFFSET * 2,x
+          sta SCORE,y
+
+          inx
+          inx
+          iny
+          cpy #6
+          bne -
+
+
+          lda SCREEN_CHAR + 80 + GUI_BONUS_OFFSET * 2
+          sta COLLECTED_DIAMONDS
+          lda SCREEN_CHAR + 80 + ( GUI_BONUS_OFFSET + 1 ) * 2
+          sta COLLECTED_DIAMONDS + 1
+
           jmp Respawn
 
 
@@ -1470,13 +1534,17 @@ LeaveSecretStage
           lda SCREEN_LINE_OFFSET_HI + 24
           sta ZEROPAGE_POINTER_1 + 1
 
+          lda #CHAR_BRIDGE_1
+          sta PARAM1
           ldy #0
 -
           lda (ZEROPAGE_POINTER_1),y
           cmp #CHAR_SECRET_ENTRANCE
           bne +
 
-          lda #CHAR_BRIDGE_1
+          lda PARAM1
+          eor #CHAR_BRIDGE_1 xor ( CHAR_BRIDGE_1 + 1 )
+          sta PARAM1
           sta (ZEROPAGE_POINTER_1),y
 
 +
@@ -1703,5 +1771,9 @@ LEVEL_BONUS
           !byte 0
           !byte 0
           !byte 0
+          !byte 0
+          !byte BONUS_STAGE_START + 2   ;12
+          !byte 0
+          !byte BONUS_STAGE_START + 3   ;14
           !byte 0
           !byte 0
