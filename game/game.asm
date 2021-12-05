@@ -63,8 +63,17 @@ Game
           sta STAGE
           sta COLLECTED_DIAMONDS
           sta COLLECTED_DIAMONDS + 1
+					;reset the score (facepalm)
+					sta SCORE
+					sta SCORE + 1
+					sta SCORE + 2
+					sta SCORE + 3
+					sta SCORE + 4
+					sta SCORE + 5
+
           lda #CHAR_0 + 1
           sta STAGE + 1
+
 
           lda #1
           sta LEVEL_NR
