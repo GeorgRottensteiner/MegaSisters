@@ -1,7 +1,7 @@
 ﻿NUM_LEVEL_ELEMENTS    = 8
 NUM_DUST_ENTRIES      = 3
 
-BONUS_STAGE_START = 18
+BONUS_STAGE_START = 19
 
 !ifdef DISK {
 TILE_DATA = $10000
@@ -76,6 +76,8 @@ Game
 
 
           lda #1
+
+					lda #17
           sta LEVEL_NR
           lda #3
           sta PLAYER_LIVES
@@ -186,27 +188,31 @@ NextLevel
           cpy #6
           bne -
 
+					lda #1
+					sta IRQ_SCROLL_OFFSET_ACTIVE
+
           jsr ScreenOn
           ;fall through
 
 !zone GameLoop
 GameLoop
-          lda #51 + SCROLL_FIRST_ROW * 8
+          ;lda #51 + SCROLL_FIRST_ROW * 8
+					lda #50 + SCROLL_FIRST_ROW * 8
           jsr WaitFrame
 
-          ;set up display for game area
-          lda SCROLL_POS
-          asl
-          sta PARAM1
-
-          lda #$50 - 8
-          clc
-          adc PARAM1
-          ;$50-scroll(0-15)
-          sta VIC4.TEXTXPOS
-
-          lda #$07
-          sta VIC4.VIC4DIS
+;          ;set up display for game area
+;          lda SCROLL_POS
+;          asl
+;          sta PARAM1
+;
+;          lda #$50 - 8
+;          clc
+;          adc PARAM1
+;          ;$50-scroll(0-15)
+;          sta VIC4.TEXTXPOS
+;
+;          lda #$07
+;          sta VIC4.VIC4DIS
 
           lda PLAYER_IS_DEAD
           ora GAME_FREEZE_DELAY
@@ -1739,11 +1745,11 @@ BUTTON_RELEASED
 
 
 LEVEL_BACKGROUND_COLOR_INDEX
-          !byte 16      ;overworld
-          !byte 19      ;underground
-          !byte 19      ;water lands
-          !byte 19      ;castle
-          !byte 19      ;bonus
+          !byte 46      ;overworld
+          !byte 3      ;underground
+          !byte 3      ;water lands
+          !byte 3      ;castle
+          !byte 3      ;bonus
 
 ; 2 = first, 1 = second, 0 = done
 DUST_POS

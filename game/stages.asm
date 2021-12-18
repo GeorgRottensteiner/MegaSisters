@@ -1,4 +1,4 @@
-﻿EL__BRICK = 0
+EL__BRICK = 0
 EL__GROUND.C = 1
 EL__STAR = 2
 EL__PIPEPIECE = 3
@@ -187,6 +187,8 @@ _SCREEN_DATA_TABLE
           !word _LEVEL_20
           !word _LEVEL_21
           !word _LEVEL_22
+          !word _LEVEL_23
+          !word _LEVEL_24
           !word 0
 
 
@@ -2234,7 +2236,148 @@ _LEVEL_17 ;Stage 16
           !byte LD_END
 
 
-_LEVEL_18 ;Stage Final
+_LEVEL_18 ;Stage 17
+          !word 309
+          !byte 0
+          !byte LDF_ELEMENT_LINE + 22,2,EL__GROUND.C
+          !byte LDF_ELEMENT_AREA + 4,3,9,EL__BLOCK3X2
+          !byte LDF_X_POS + 8; 8
+          !byte LDF_ELEMENT + 22,EL__GROUND.R
+          !byte LDF_X_POS + 1; 9
+          !byte LDF_ELEMENT_LINE + 21,30,EL__BRIDGE
+          !byte LDF_X_POS + 7; 16
+          !byte LDF_ELEMENT_AREA + 4,3,2,EL__BLOCK3X2
+          !byte LDF_X_POS + 3; 19
+          !byte LDF_ELEMENT + 13,EL__STAR
+          !byte LDF_X_POS + 2; 21
+          !byte LD_OBJECT | 1, 3
+          !byte LDF_X_POS + 11; 32
+          !byte LDF_ELEMENT_AREA + 4,3,2,EL__BLOCK3X2
+          !byte LDF_X_POS + 3; 35
+          !byte LDF_ELEMENT + 13,EL__STAREXTRA
+          !byte LDF_X_POS + 1; 36
+          !byte LD_OBJECT | 1, 3
+          !byte LDF_X_POS + 13; 49
+          !byte LDF_ELEMENT_AREA + 4,3,2,EL__BLOCK3X2
+          !byte LDF_X_POS + 3; 52
+          !byte LDF_ELEMENT + 13,EL__STAREXTRA
+          !byte LDF_X_POS + 1; 53
+          !byte LD_OBJECT | 1, 3
+          !byte LDF_X_POS + 12; 65
+          !byte LDF_ELEMENT_LINE + 3,4,EL__DIAMOND
+          !byte LDF_PREV_ELEMENT_LINE + 6,4
+          !byte LDF_X_POS + 10; 75
+          !byte LDF_ELEMENT_AREA + 17,2,4,EL__BLOCK3X2
+          !byte LDF_X_POS + 3; 78
+          !byte LD_OBJECT | 18, 16
+          !byte LDF_X_POS + 9; 87
+          !byte LDF_ELEMENT_LINE + 17,6,EL__BRIDGE
+          !byte LDF_X_POS + 1; 88
+          !byte LDF_ELEMENT_LINE + 10,1,EL__DIAMOND
+          !byte LDF_X_POS + 4; 92
+          !byte LDF_PREV_ELEMENT_LINE + 10,1
+          !byte LDF_X_POS + 4; 96
+          !byte LDF_PREV_ELEMENT_LINE + 10,1
+          !byte LDF_X_POS + 9; 105
+          !byte LDF_ELEMENT_AREA + 13, 1,6,EL__BLOCKSMALL
+          !byte LDF_X_POS + 2; 107
+          !byte LDF_ELEMENT_LINE + 19,5,EL__BRIDGE
+          !byte LDF_PREV_ELEMENT_LINE + 13,5
+          !byte LDF_X_POS + 1; 108
+          !byte LDF_ELEMENT + 5,EL__DIAMOND
+          !byte LDF_PREV_ELEMENT + 8
+          !byte LDF_PREV_ELEMENT + 15
+          !byte LDF_X_POS + 3; 111
+          !byte LDF_PREV_ELEMENT + 5
+          !byte LDF_PREV_ELEMENT + 8
+          !byte LDF_PREV_ELEMENT + 15
+          !byte LDF_X_POS + 3; 114
+          !byte LDF_PREV_ELEMENT + 5
+          !byte LDF_PREV_ELEMENT + 8
+          !byte LDF_PREV_ELEMENT + 15
+          !byte LDF_X_POS + 3; 117
+          !byte LDF_ELEMENT_AREA + 13, 1,6,EL__BLOCKSMALL
+          !byte LDF_X_POS + 8; 125
+          !byte LDF_ELEMENT_LINE + 17,6,EL__BRIDGE
+          !byte LDF_X_POS + 2; 127
+          !byte LDF_ELEMENT + 6,EL__DIAMOND
+          !byte LDF_X_POS + 3; 130
+          !byte LDF_PREV_ELEMENT + 6
+          !byte LDF_X_POS + 3; 133
+          !byte LDF_PREV_ELEMENT + 6
+          !byte LDF_X_POS + 4; 137
+          !byte LD_OBJECT | 10, 15
+          !byte LDF_X_POS + 1; 138
+          !byte LD_OBJECT | 10, 13
+          !byte LDF_X_POS + 1; 139
+          !byte LD_OBJECT | 10, 11
+          !byte LDF_X_POS + 4; 143
+          !byte LDF_ELEMENT_AREA + 13, 1,6,EL__BLOCKSMALL
+          !byte LDF_X_POS + 2; 145
+          !byte LDF_ELEMENT_LINE + 13,5,EL__BRIDGE
+          !byte LDF_PREV_ELEMENT_LINE + 19,5
+          !byte LDF_X_POS + 1; 146
+          !byte LDF_ELEMENT_LINE + 15,1,EL__DIAMOND
+          !byte LDF_PREV_ELEMENT_LINE + 8,1
+          !byte LDF_PREV_ELEMENT_LINE + 5,1
+          !byte LDF_X_POS + 3; 149
+          !byte LDF_PREV_ELEMENT_LINE + 15,1
+          !byte LDF_PREV_ELEMENT_LINE + 8,1
+          !byte LDF_PREV_ELEMENT_LINE + 5,1
+          !byte LDF_X_POS + 3; 152
+          !byte LDF_PREV_ELEMENT_LINE + 15,1
+          !byte LDF_PREV_ELEMENT_LINE + 8,1
+          !byte LDF_PREV_ELEMENT_LINE + 5,1
+          !byte LDF_X_POS + 3; 155
+          !byte LDF_ELEMENT_AREA + 13, 1,6,EL__BLOCKSMALL
+          !byte LDF_X_POS + 11; 166
+          !byte LDF_ELEMENT_LINE + 13,2,EL__BRIDGE
+          !byte LDF_X_POS + 9; 175
+          !byte LD_OBJECT | 15, 14
+          !byte LDF_X_POS + 8; 183
+          !byte LDF_PREV_ELEMENT_LINE + 13,2
+          !byte LDF_X_POS + 11; 194
+          !byte LD_OBJECT | 15, 14
+          !byte LDF_X_POS + 9; 203
+          !byte LD_OBJECT | 15, 17
+          !byte LDF_X_POS + 9; 212
+          !byte LD_OBJECT | 15, 14
+          !byte LDF_X_POS + 7; 219
+          !byte LDF_PREV_ELEMENT_LINE + 19,27
+          !byte LDF_X_POS + 4; 223
+          !byte LDF_ELEMENT_LINE + 12,2,EL__STAR
+          !byte LDF_X_POS + 3; 226
+          !byte LDF_ELEMENT_AREA + 3,3,2,EL__BLOCK3X2
+          !byte LDF_X_POS + 17; 243
+          !byte LDF_PREV_ELEMENT_AREA + 3,3,130
+          !byte LDF_X_POS + 3; 246
+          !byte LDF_ELEMENT + 12,EL__STAR
+          !byte LDF_X_POS + 14; 260
+          !byte LDF_ELEMENT_AREA + 3,3,2,EL__BLOCK3X2
+          !byte LDF_X_POS + 3; 263
+          !byte LDF_ELEMENT + 12,EL__STAR
+          !byte LDF_X_POS + 14; 277
+          !byte LDF_ELEMENT_LINE + 13,2,EL__BRIDGE
+          !byte LDF_X_POS + 7; 284
+          !byte LDF_PREV_ELEMENT_LINE + 7,2
+          !byte LDF_X_POS + 1; 285
+          !byte LDF_ELEMENT_AREA + 21,8,2,EL__BLOCK3X2
+          !byte LDF_X_POS + 8; 293
+          !byte LDF_ELEMENT_AREA + 2,2,2,EL__DIAMOND
+          !byte LDF_PREV_ELEMENT_AREA + 14,2,130
+          !byte LDF_X_POS + 5; 298
+          !byte LDF_PREV_ELEMENT_AREA + 8,2,130
+          !byte LDF_X_POS + 5; 303
+          !byte LDF_ELEMENT_LINE + 15,1,EL__BLOCK3X2
+          !byte LDF_X_POS + 1; 304
+          !byte LDF_ELEMENT_AREA + 17,1,2,EL__EXIT
+          !byte LDF_ELEMENT_LINE + 7,2,EL__BRIDGE
+          !byte LDF_X_POS + 2; 306
+          !byte LDF_ELEMENT_AREA + 15, 1,3,EL__BLOCK3X2
+          !byte LD_END
+
+
+_LEVEL_19 ;Stage Final
           !word 80
           !byte 0
           !byte LDF_ELEMENT_LINE + 23,40,EL__UNDERGROUNDBRICK
@@ -2263,7 +2406,7 @@ _LEVEL_18 ;Stage Final
           !byte LD_END
 
 
-_LEVEL_19 ;Bonus #1
+_LEVEL_20 ;Bonus #1
           !word 40
           !byte 4
           !byte LDF_ELEMENT_AREA + 2, 1,11,EL__BRICK
@@ -2284,7 +2427,7 @@ _LEVEL_19 ;Bonus #1
           !byte LD_END
 
 
-_LEVEL_20 ;Bonus #2
+_LEVEL_21 ;Bonus #2
           !word 40
           !byte 4
           !byte LDF_ELEMENT_AREA + 2, 1,11,EL__BRICK
@@ -2326,7 +2469,7 @@ _LEVEL_20 ;Bonus #2
           !byte LD_END
 
 
-_LEVEL_21 ;Bonus #3
+_LEVEL_22 ;Bonus #3
           !word 40
           !byte 4
           !byte LDF_ELEMENT_AREA + 2, 1,11,EL__BRICK
@@ -2364,7 +2507,7 @@ _LEVEL_21 ;Bonus #3
           !byte LD_END
 
 
-_LEVEL_22 ;Bonus #4
+_LEVEL_23 ;Bonus #4
           !word 40
           !byte 4
           !byte LDF_ELEMENT_AREA + 2, 1,11,EL__BRICK
@@ -2403,5 +2546,209 @@ _LEVEL_22 ;Bonus #4
           !byte LDF_X_POS + 2; 35
           !byte LDF_ELEMENT_AREA + 2, 1,21,EL__COLUMN
           !byte LD_END
+
+
+_LEVEL_24 ;Xmas Forum64
+          !word 299
+          !byte 0
+          !byte LDF_ELEMENT_LINE + 22,28,EL__GROUND.C
+          !byte LDF_X_POS + 15; 15
+          !byte LDF_ELEMENT_LINE + 19,1,EL__MUSHROOM
+          !byte LDF_X_POS + 24; 39
+          !byte LDF_ELEMENT + 5,EL__BRICK
+          !byte LDF_ELEMENT_AREA + 7,1,10,EL__COLUMN
+          !byte LDF_X_POS + 3; 42
+          !byte LDF_ELEMENT + 6,EL__BRICK
+          !byte LDF_X_POS + 3; 45
+          !byte LDF_ELEMENT_LINE + 20,1,EL__BUSH.1
+          !byte LDF_ELEMENT + 7,EL__STAR
+          !byte LDF_X_POS + 3; 48
+          !byte LDF_ELEMENT + 6,EL__BRICK
+          !byte LDF_X_POS + 3; 51
+          !byte LDF_ELEMENT_AREA + 7,1,10,EL__COLUMN
+          !byte LDF_ELEMENT + 5,EL__BRICK
+          !byte LDF_X_POS + 4; 55
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 3; 58
+          !byte LDF_PREV_ELEMENT_LINE + 5,2
+          !byte LDF_PREV_ELEMENT_LINE + 15,2
+          !byte LDF_PREV_ELEMENT_LINE + 10,1
+          !byte LDF_ELEMENT_LINE + 2,1,EL__BUSH.2
+          !byte LDF_X_POS + 7; 65
+          !byte LDF_ELEMENT_AREA + 5, 1,6,EL__BRICK
+          !byte LDF_X_POS + 3; 68
+          !byte LDF_PREV_ELEMENT_LINE + 5,2
+          !byte LDF_PREV_ELEMENT_LINE + 9,2
+          !byte LDF_X_POS + 4; 72
+          !byte LDF_PREV_ELEMENT_LINE + 7,1
+          !byte LDF_PREV_ELEMENT_AREA + 11, 1,131
+          !byte LDF_X_POS + 3; 75
+          !byte LD_OBJECT | 1, 21
+          !byte LDF_X_POS + 1; 76
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 3; 79
+          !byte LDF_PREV_ELEMENT_LINE + 5,2
+          !byte LDF_PREV_ELEMENT_LINE + 9,2
+          !byte LDF_X_POS + 4; 83
+          !byte LDF_PREV_ELEMENT_AREA + 11, 1,131
+          !byte LDF_PREV_ELEMENT_LINE + 7,1
+          !byte LDF_X_POS + 4; 87
+          !byte LDF_ELEMENT_AREA + 5, 1,3,EL__BLOCK3X2
+          !byte LDF_X_POS + 3; 90
+          !byte LDF_PREV_ELEMENT_AREA + 9, 1,132
+          !byte LDF_X_POS + 3; 93
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,131
+          !byte LDF_X_POS + 8; 101
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 3; 104
+          !byte LDF_PREV_ELEMENT_LINE + 5,2
+          !byte LDF_PREV_ELEMENT_LINE + 15,2
+          !byte LDF_X_POS + 2; 106
+          !byte LDF_ELEMENT_LINE + 20,1,EL__BUSH.1
+          !byte LDF_X_POS + 5; 111
+          !byte LDF_ELEMENT_AREA + 5, 1,6,EL__BLOCK3X2
+          !byte LDF_X_POS + 1; 112
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.R
+          !byte LDF_X_POS + 2; 114
+          !byte LDF_ELEMENT_LINE + 10,1,EL__BLOCK3X2
+          !byte LDF_X_POS + 3; 117
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 4; 121
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.L
+          !byte LDF_ELEMENT_AREA + 7, 1,5,EL__BLOCK3X2
+          !byte LDF_PREV_ELEMENT_LINE + 5,3
+          !byte LDF_X_POS + 2; 123
+          !byte LDF_ELEMENT_LINE + 22,9,EL__GROUND.C
+          !byte LDF_X_POS + 1; 124
+          !byte LDF_ELEMENT_LINE + 19,1,EL__BUSH.2
+          !byte LDF_ELEMENT_LINE + 9,2,EL__BLOCK3X2
+          !byte LDF_X_POS + 4; 128
+          !byte LDF_PREV_ELEMENT + 7
+          !byte LDF_PREV_ELEMENT_AREA + 11, 1,131
+          !byte LDF_X_POS + 4; 132
+          !byte LDF_ELEMENT_AREA + 5, 1,6,EL__BRICK
+          !byte LDF_X_POS + 4; 136
+          !byte LDF_PREV_ELEMENT_LINE + 5,3
+          !byte LDF_PREV_ELEMENT_AREA + 7, 1,130
+          !byte LDF_PREV_ELEMENT_LINE + 15,3
+          !byte LDF_X_POS + 3; 139
+          !byte LDF_PREV_ELEMENT + 10
+          !byte LDF_X_POS + 3; 142
+          !byte LDF_PREV_ELEMENT_AREA + 11, 1,130
+          !byte LDF_X_POS + 4; 146
+          !byte LDF_PREV_ELEMENT_LINE + 5,3
+          !byte LDF_X_POS + 3; 149
+          !byte LDF_PREV_ELEMENT_AREA + 7, 1,133
+          !byte LDF_X_POS + 7; 156
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 2; 158
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.R
+          !byte LDF_X_POS + 1; 159
+          !byte LDF_ELEMENT + 6,EL__BRICK
+          !byte LDF_X_POS + 3; 162
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.L
+          !byte LDF_ELEMENT + 7,EL__STAR
+          !byte LDF_X_POS + 2; 164
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.R
+          !byte LDF_X_POS + 1; 165
+          !byte LDF_ELEMENT + 6,EL__BRICK
+          !byte LDF_X_POS + 3; 168
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.L
+          !byte LDF_ELEMENT_AREA + 5, 1,6,EL__BRICK
+          !byte LDF_X_POS + 2; 170
+          !byte LDF_ELEMENT_LINE + 22,18,EL__GROUND.C
+          !byte LDF_X_POS + 2; 172
+          !byte LDF_ELEMENT_AREA + 5, 1,6,EL__BRICK
+          !byte LDF_X_POS + 3; 175
+          !byte LDF_PREV_ELEMENT_LINE + 5,1
+          !byte LDF_PREV_ELEMENT_LINE + 9,1
+          !byte LDF_X_POS + 3; 178
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 4; 182
+          !byte LDF_PREV_ELEMENT_LINE + 15,2
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,131
+          !byte LDF_X_POS + 3; 185
+          !byte LDF_PREV_ELEMENT_LINE + 5,2
+          !byte LDF_PREV_ELEMENT_LINE + 9,1
+          !byte LDF_X_POS + 3; 188
+          !byte LDF_PREV_ELEMENT_AREA + 9, 1,132
+          !byte LDF_X_POS + 1; 189
+          !byte LD_OBJECT | 10, 2
+          !byte LDF_X_POS + 6; 195
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 3; 198
+          !byte LDF_PREV_ELEMENT_LINE + 5,2
+          !byte LDF_PREV_ELEMENT_LINE + 9,1
+          !byte LDF_X_POS + 7; 205
+          !byte LDF_ELEMENT_AREA + 5, 1,6,EL__BLOCK3X2
+          !byte LDF_X_POS + 1; 206
+          !byte LD_OBJECT | 1, 21
+          !byte LDF_X_POS + 2; 208
+          !byte LDF_PREV_ELEMENT_LINE + 5,1
+          !byte LDF_PREV_ELEMENT_LINE + 15,1
+          !byte LDF_X_POS + 3; 211
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 4; 215
+          !byte LD_OBJECT | 1, 21
+          !byte LDF_ELEMENT_AREA + 5, 1,6,EL__BRICK
+          !byte LDF_X_POS + 3; 218
+          !byte LDF_PREV_ELEMENT_LINE + 5,2
+          !byte LDF_PREV_ELEMENT_LINE + 9,2
+          !byte LDF_X_POS + 4; 222
+          !byte LDF_PREV_ELEMENT_AREA + 11, 1,131
+          !byte LDF_PREV_ELEMENT_LINE + 7,1
+          !byte LDF_X_POS + 4; 226
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 3; 229
+          !byte LDF_PREV_ELEMENT_LINE + 15,2
+          !byte LDF_ELEMENT_LINE + 14,2,EL__WATER.TOP
+          !byte LDF_X_POS + 4; 233
+          !byte LDF_ELEMENT_AREA + 5, 1,6,EL__BRICK
+          !byte LDF_X_POS + 4; 237
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 3; 240
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.R
+          !byte LDF_ELEMENT + 6,EL__BRICK
+          !byte LDF_X_POS + 3; 243
+          !byte LDF_ELEMENT_LINE + 7,1,EL__STAR
+          !byte LDF_X_POS + 3; 246
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.L
+          !byte LDF_ELEMENT + 6,EL__BRICK
+          !byte LDF_X_POS + 2; 248
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.R
+          !byte LDF_X_POS + 1; 249
+          !byte LDF_ELEMENT_LINE + 9,1,EL__DIAMOND
+          !byte LDF_ELEMENT_AREA + 5, 1,6,EL__BRICK
+          !byte LDF_X_POS + 5; 254
+          !byte LDF_ELEMENT_AREA + 7, 1,5,EL__DIAMOND
+          !byte LDF_PREV_ELEMENT_LINE + 5,3
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.L
+          !byte LDF_X_POS + 2; 256
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.R
+          !byte LDF_ELEMENT_LINE + 15,1,EL__DIAMOND
+          !byte LDF_PREV_ELEMENT_LINE + 9,1
+          !byte LDF_X_POS + 2; 258
+          !byte LDF_PREV_ELEMENT_AREA + 9, 1,132
+          !byte LDF_X_POS + 3; 261
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.L
+          !byte LDF_X_POS + 1; 262
+          !byte LDF_ELEMENT_AREA + 5, 1,4,EL__DIAMOND
+          !byte LDF_X_POS + 1; 263
+          !byte LDF_ELEMENT_LINE + 22,4,EL__GROUND.C
+          !byte LDF_X_POS + 1; 264
+          !byte LDF_ELEMENT_LINE + 11,3,EL__DIAMOND
+          !byte LDF_X_POS + 2; 266
+          !byte LDF_PREV_ELEMENT_AREA + 5, 1,134
+          !byte LDF_X_POS + 8; 274
+          !byte LDF_ELEMENT_AREA + 16, 1,2,EL__PIPEPIECE
+          !byte LDF_X_POS + 5; 279
+          !byte LDF_ELEMENT_LINE + 22,1,EL__GROUND.R
+          !byte LDF_X_POS + 11; 290
+          !byte LD_OBJECT | 6, 15
+          !byte LDF_X_POS + 2; 292
+          !byte LDF_ELEMENT_AREA + 6, 1,19,EL__COLUMN
+          !byte LDF_ELEMENT + 4,EL__BLOCK3X2
+          !byte LD_END
+
 
 

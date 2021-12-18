@@ -18,7 +18,8 @@ MUSIC_PLAYER = $4000
 NUM_SPRITES = 38
 NUM_CHARS   = 245
 
-NUM_SPRITE_PALETTES = 5
+CHAR_PALETTE_ENTRY_COUNT = 52
+NUM_SPRITE_PALETTES = 8
 
 PARAM1    = $67
 PARAM2    = $68
@@ -109,6 +110,10 @@ ENTRY_POINT
 
           cli
 
+					;force PAL mode
+					lda #$80
+					trb VIC4.PALNTSC_VGAHDTV_RASLINE0
+
           lda #0
           sta VIC.BORDER_COLOR
 
@@ -142,8 +147,6 @@ ENTRY_POINT
           lda #$80
           sta VIC4.SPRPTR16
 
-          jsr SetPalette
-
           jmp Credits
           ;jmp Title
 
@@ -158,48 +161,22 @@ SetPalette
           sta VIC4.PALSEL
 
 
-          ;copy palette data (32 entries),
+          ;copy palette data (CHAR_PALETTE_ENTRY_COUNT entries),
           ldx #0
           ldy #0
 -
 
           lda PALETTE_DATA, x
           sta VIC4.PALRED,y
-          lda PALETTE_DATA + 1 * 32, x
+          lda PALETTE_DATA + 1 * CHAR_PALETTE_ENTRY_COUNT, x
           sta VIC4.PALGREEN,y
-          lda PALETTE_DATA + 2 * 32, x
+          lda PALETTE_DATA + 2 * CHAR_PALETTE_ENTRY_COUNT, x
           sta VIC4.PALBLUE,y
 
           iny
           inx
-          cpx #32
+          cpx #CHAR_PALETTE_ENTRY_COUNT
           bne -
-
-          ;duplicate sprite palettes
-          ;sprite palettes have 16 entries per sprite for 16 color mode
-          ;use palette bank 1
-          ;lda #%10011001
-;          sta VIC4.PALSEL
-;
-;          ldx #$00
-;          ldy #0
-;-
-;          lda PALETTE_DATA_SPRITES, x
-;          sta VIC4.PALRED,y
-;          lda PALETTE_DATA_SPRITES + 1 * 32, x
-;          sta VIC4.PALGREEN,y
-;          lda PALETTE_DATA_SPRITES + 2 * 32, x
-;          sta VIC4.PALBLUE,y
-;
-;          iny
-;
-;          inx
-;          cpx #16
-;          bne -
-;
-;          ldx #0
-;          cpy #16 * 8
-;          bne -
 
           ;set sprite pal to bank 1
           lda #%10011001
@@ -222,7 +199,7 @@ SetPalette
 !source "credits.asm"
 
 PALETTE_DATA
-          !media "game.charsetproject",PALETTESWIZZLED,0,32
+          !media "game.charsetproject",PALETTESWIZZLED,0,CHAR_PALETTE_ENTRY_COUNT
 
 ANIMATED_TILE_DATA
           !media "tilesanimations.charscreen",CHARSET,0,22

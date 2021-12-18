@@ -76,6 +76,7 @@ TYPE_DEADLY_DECO  = 17    ;boss parts
 TYPE_EXPLOSION    = 18
 TYPE_CLOWN        = 19
 TYPE_CRYSTAL      = 20
+TYPE_EXTRA_2      = 21		;extra with other palette
 
 EXTRA_POWERUP       = 0
 EXTRA_SHOT          = 1
@@ -230,15 +231,15 @@ SpawnObjectInSlot
           sta OBJECT_DIR,x
 
 +
-          ;
-          lda TYPE_START_SPRITE_FLAGS,y
-          and #SF_START_PRIO
-          beq +
-
-          lda BIT_TABLE,x
-          tsb VIC.SPRITE_PRIORITY
-
-+
+          ;sprite prio
+          ;lda TYPE_START_SPRITE_FLAGS,y
+;          and #SF_START_PRIO
+;          beq +
+;
+;          lda BIT_TABLE,x
+;          tsb VIC.SPRITE_PRIORITY
+;
+;+
 
 
           ;lda TYPE_START_SPRITE_FLAGS,y
@@ -2163,6 +2164,8 @@ ExplodeObject
           lda OBJECT_ACTIVE,x
           cmp #TYPE_EXTRA
           beq .PickExtra
+          cmp #TYPE_EXTRA_2
+          beq .PickExtra
 
           ;the final crystal
           lda #1
@@ -2805,6 +2808,17 @@ SpawnExtra
 
           lda #TYPE_EXTRA
           sta PARAM3
+
+					lda PLAYER_POWERED_UP
+					beq +
+
+					;other extras as extra 2
+          lda #TYPE_EXTRA_2
+          sta PARAM3
+
++
+
+
           ldx #1
           jsr SpawnObjectStartingWithSlot
 
@@ -3596,6 +3610,7 @@ TYPE_START_SPRITE = * - 1
           !byte <SPRITE_EXPLOSION
           !byte <SPRITE_CLOWN
           !byte <SPRITE_CRYSTAL
+					!byte <SPRITE_EXTRA
 
 TYPE_START_SPRITE_HI = * - 1
           !byte >SPRITE_PLAYER_RUN_R_1
@@ -3618,6 +3633,7 @@ TYPE_START_SPRITE_HI = * - 1
           !byte >SPRITE_EXPLOSION
           !byte >SPRITE_CLOWN
           !byte >SPRITE_CRYSTAL
+					!byte >SPRITE_EXTRA
 
 ;0 = player
 ;xxxx xxx1 = enemy
@@ -3657,6 +3673,7 @@ TYPE_ENEMY_TYPE_FLAGS = * - 1
           !byte 0     ;explosion
           !byte ETF_DEADLY     ;clown
           !byte ETF_EXTRA     ;crystal
+					!byte ETF_EXTRA     ;extra 2
 
 TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHPlayer
@@ -3679,6 +3696,7 @@ TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHExplosion
           !byte <BHClown
           !byte <BHNone
+					!byte <BHExtra
 
 TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHPlayer
@@ -3701,6 +3719,7 @@ TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHExplosion
           !byte >BHClown
           !byte >BHNone
+					!byte >BHExtra
 
 TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;player
@@ -3723,6 +3742,7 @@ TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
+					!byte SF_DIR_R | SF_START_PRIO  ;extra 2
 
 
 TYPE_SPAWN_DELTA_X = * - 1
@@ -3746,6 +3766,7 @@ TYPE_SPAWN_DELTA_X = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
+					!byte 0         ;extra 2
 
 ;offset added onto Y
 TYPE_SPAWN_DELTA_Y = * - 1
@@ -3769,6 +3790,7 @@ TYPE_SPAWN_DELTA_Y = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
+					!byte 0         ;extra 2
 
 TYPE_SPRITE_PALETTE = * - 1
           !byte 3         ;player
@@ -3776,12 +3798,12 @@ TYPE_SPRITE_PALETTE = * - 1
           !byte 3         ;player dying
           !byte 0         ;flat
           !byte 1         ;extra
-          !byte 0         ;diamond
+          !byte 7         ;diamond
           !byte 0         ;elevator
           !byte 0         ;crab
           !byte 0         ;player shot
           !byte 0         ;deco
-          !byte 0         ;bee
+          !byte 6         ;bee
           !byte 0         ;fish
           !byte 0         ;eye
           !byte 0         ;dragon
@@ -3791,6 +3813,7 @@ TYPE_SPRITE_PALETTE = * - 1
           !byte 0         ;explosion
           !byte 2         ;clown
           !byte 4         ;crystal
+					!byte 5         ;extra 2
 
 FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0   ;player
@@ -3813,6 +3836,7 @@ FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
+					!byte 0         ;extra 2
 
 FLATTENED_ENEMY_SPRITE_HI = * - 1
           !byte 0   ;player
@@ -3835,6 +3859,7 @@ FLATTENED_ENEMY_SPRITE_HI = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
+					!byte 0         ;extra 2
 
 TYPE_START_HP = * - 1
           !byte 0   ;player
@@ -3857,6 +3882,7 @@ TYPE_START_HP = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
+					!byte 0         ;extra 2
 
 JUMP_TABLE
           !byte 6,6,5,5,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,2,2,1,1,1,0
