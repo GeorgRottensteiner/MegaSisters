@@ -110,9 +110,9 @@ ENTRY_POINT
 
           cli
 
-					;force PAL mode
-					lda #$80
-					trb VIC4.PALNTSC_VGAHDTV_RASLINE0
+          ;force PAL mode
+          lda #$80
+          trb VIC4.PALNTSC_VGAHDTV_RASLINE0
 
           lda #0
           sta VIC.BORDER_COLOR
@@ -219,6 +219,7 @@ GUI_BAR
 PALETTE_DATA_SPRITES
           !media "megasisters.spriteproject",PALETTESWIZZLED,0,NUM_SPRITE_PALETTES * 16
 
+!media "bg1.charscreen",CHAR
 
 !source "objects.asm"
 

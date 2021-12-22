@@ -230,5 +230,22 @@ ScreenOn
           rts
 
 
+
+!zone MultiplyBy3
+;returns A * 3
+MultiplyBy3
+          sta .TEMP
+          asl
+          clc
+          adc .TEMP
+          rts
+
+
+.TEMP
+          !byte 0
+
+
+
+
 BIT_TABLE
           !byte 1,2,4,8,16,32,64,128

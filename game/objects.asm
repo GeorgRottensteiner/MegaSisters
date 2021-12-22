@@ -2,56 +2,56 @@
 
 SPRITE_BASE = ( SPRITE_LOCATION ) / 64
 
-SPRITE_PLAYER_IDLE_R    = SPRITE_BASE + 92 * 4
-SPRITE_PLAYER_RUN_R_1   = SPRITE_BASE + 95 * 4
-SPRITE_PLAYER_RUN_R_2   = SPRITE_BASE + 96 * 4
-SPRITE_PLAYER_JUMP_R    = SPRITE_BASE + 100 * 4
-SPRITE_PLAYER_FALL_R    = SPRITE_BASE + 101 * 4
-SPRITE_PLAYER_DIE_R     = SPRITE_BASE + 114 * 4
-SPRITE_PLAYER_IDLE_L    = SPRITE_BASE + 103 * 4
-SPRITE_PLAYER_RUN_L_1   = SPRITE_BASE + 106 * 4
-SPRITE_PLAYER_RUN_L_2   = SPRITE_BASE + 107 * 4
-SPRITE_PLAYER_JUMP_L    = SPRITE_BASE + 111 * 4
-SPRITE_PLAYER_FALL_L    = SPRITE_BASE + 112 * 4
-SPRITE_GOOMBA_1         = SPRITE_BASE + 10 * 4
-SPRITE_GOOMBA_FLAT      = SPRITE_BASE + 12 * 4
-SPRITE_EXTRA            = SPRITE_BASE + 2 * 4
-SPRITE_DIAMOND          = SPRITE_BASE + 16 * 4
-SPRITE_ELEVATOR_1       = SPRITE_BASE + 27 * 4
+SPRITE_PLAYER_IDLE_R    = SPRITE_BASE + 92 * 3
+SPRITE_PLAYER_RUN_R_1   = SPRITE_BASE + 95 * 3
+SPRITE_PLAYER_RUN_R_2   = SPRITE_BASE + 96 * 3
+SPRITE_PLAYER_JUMP_R    = SPRITE_BASE + 100 * 3
+SPRITE_PLAYER_FALL_R    = SPRITE_BASE + 101 * 3
+SPRITE_PLAYER_DIE_R     = SPRITE_BASE + 114 * 3
+SPRITE_PLAYER_IDLE_L    = SPRITE_BASE + 103 * 3
+SPRITE_PLAYER_RUN_L_1   = SPRITE_BASE + 106 * 3
+SPRITE_PLAYER_RUN_L_2   = SPRITE_BASE + 107 * 3
+SPRITE_PLAYER_JUMP_L    = SPRITE_BASE + 111 * 3
+SPRITE_PLAYER_FALL_L    = SPRITE_BASE + 112 * 3
+SPRITE_GOOMBA_1         = SPRITE_BASE + 10 * 3
+SPRITE_GOOMBA_FLAT      = SPRITE_BASE + 12 * 3
+SPRITE_EXTRA            = SPRITE_BASE + 2 * 3
+SPRITE_DIAMOND          = SPRITE_BASE + 16 * 3
+SPRITE_ELEVATOR_1       = SPRITE_BASE + 27 * 3
 
-SPRITE_PLAYER_RUN_R_1_EX = SPRITE_BASE + 118 * 4 ;SPRITE_BASE + 17 * 4
+SPRITE_PLAYER_RUN_R_1_EX = SPRITE_BASE + 118 * 3 ;SPRITE_BASE + 17 * 4
 
-SPRITE_CRAB_R           = SPRITE_BASE + 30 * 4
-SPRITE_CRAB_L           = SPRITE_BASE + 32 * 4
-SPRITE_CRAB_FLAT        = SPRITE_BASE + 34 * 4
+SPRITE_CRAB_R           = SPRITE_BASE + 30 * 3
+SPRITE_CRAB_L           = SPRITE_BASE + 32 * 3
+SPRITE_CRAB_FLAT        = SPRITE_BASE + 34 * 3
 
-SPRITE_EXTRA_FLASH      = SPRITE_BASE + 35 * 4
+SPRITE_EXTRA_FLASH      = SPRITE_BASE + 35 * 3
 
-SPRITE_PLAYER_SHOT      = SPRITE_BASE + 37 * 4
+SPRITE_PLAYER_SHOT      = SPRITE_BASE + 37 * 3
 
-SPRITE_BEE_1            = SPRITE_BASE + 38 * 4
-SPRITE_BEE_FLAT         = SPRITE_BASE + 40 * 4
+SPRITE_BEE_1            = SPRITE_BASE + 38 * 3
+SPRITE_BEE_FLAT         = SPRITE_BASE + 40 * 3
 
-SPRITE_FISH_1           = SPRITE_BASE + 41 * 4
+SPRITE_FISH_1           = SPRITE_BASE + 41 * 3
 
-SPRITE_EYE_1            = SPRITE_BASE + 45 * 4
-SPRITE_EYE_FLAT         = SPRITE_BASE + 47 * 4
-SPRITE_EYE_1_R          = SPRITE_BASE + 90 * 4
+SPRITE_EYE_1            = SPRITE_BASE + 45 * 3
+SPRITE_EYE_FLAT         = SPRITE_BASE + 47 * 3
+SPRITE_EYE_1_R          = SPRITE_BASE + 90 * 3
 
-SPRITE_DRAGON           = SPRITE_BASE + 57 * 4
-SPRITE_ANT              = SPRITE_BASE + 48 * 4
-SPRITE_PLATFORM         = SPRITE_BASE + 72 * 4
+SPRITE_DRAGON           = SPRITE_BASE + 57 * 3
+SPRITE_ANT              = SPRITE_BASE + 48 * 3
+SPRITE_PLATFORM         = SPRITE_BASE + 72 * 3
 
-SPRITE_EXTRA_FLASH_DOUBLE   = SPRITE_BASE + 76 * 4
+SPRITE_EXTRA_FLASH_DOUBLE   = SPRITE_BASE + 76 * 3
 
-SPRITE_ANT_DEAD_1       = SPRITE_BASE + 77 * 4
-SPRITE_DRAGON_DEAD_1    = SPRITE_BASE + 80 * 4
+SPRITE_ANT_DEAD_1       = SPRITE_BASE + 77 * 3
+SPRITE_DRAGON_DEAD_1    = SPRITE_BASE + 80 * 3
 
-SPRITE_EXPLOSION        = SPRITE_BASE + 85 * 4
+SPRITE_EXPLOSION        = SPRITE_BASE + 85 * 3
 
-SPRITE_CLOWN            = SPRITE_BASE + 86 * 4
+SPRITE_CLOWN            = SPRITE_BASE + 86 * 3
 
-SPRITE_CRYSTAL          = SPRITE_BASE + 0 * 4
+SPRITE_CRYSTAL          = SPRITE_BASE + 0 * 3
 
 OBJECT_HEIGHT           = 8 * 2
 
@@ -76,7 +76,7 @@ TYPE_DEADLY_DECO  = 17    ;boss parts
 TYPE_EXPLOSION    = 18
 TYPE_CLOWN        = 19
 TYPE_CRYSTAL      = 20
-TYPE_EXTRA_2      = 21		;extra with other palette
+TYPE_EXTRA_2      = 21    ;extra with other palette
 
 EXTRA_POWERUP       = 0
 EXTRA_SHOT          = 1
@@ -654,8 +654,8 @@ BHPlayer
           and #$03
           sta OBJECT_ANIM_POS,x
 
-          asl
-          asl
+          jsr MultiplyBy3
+
           clc
           adc PLAYER_SPRITES,y
           sta OBJECT_SPRITE,x
@@ -677,8 +677,7 @@ BHPlayer
           tay
           lda PING_PONG_TABLE,y
 
-          asl
-          asl
+          jsr MultiplyBy3
           clc
           ldy OBJECT_DIR,x
           adc PLAYER_SPRITES_IDLE,y
@@ -802,8 +801,8 @@ PLAYER_SPRITES_FALL
           lda #$01
           eor OBJECT_ANIM_POS,x
           sta OBJECT_ANIM_POS,x
-          asl
-          asl
+
+          jsr MultiplyBy3
           clc
           adc PLAYER_SPRITES,y
           sta OBJECT_SPRITE,x
@@ -956,7 +955,12 @@ BHGoomba
           inc OBJECT_ANIM_DELAY,x
           lda OBJECT_ANIM_DELAY,x
           and #$04
-          ora #<SPRITE_GOOMBA_1
+          beq +
+
+          lda #3
++
+          clc
+          adc #<SPRITE_GOOMBA_1
           sta OBJECT_SPRITE,x
           rts
 
@@ -979,7 +983,11 @@ BHBee
           inc OBJECT_ANIM_DELAY,x
           lda OBJECT_ANIM_DELAY,x
           and #$04
-          ora #<SPRITE_BEE_1
+          beq +
+          lda #3
++
+          clc
+          adc #<SPRITE_BEE_1
           sta OBJECT_SPRITE,x
           rts
 
@@ -1000,7 +1008,7 @@ BHFish
           beq .UpdateTablePointer
           sta PARAM2
 
-          lda #<( SPRITE_FISH_1 + 3 * 4 )
+          lda #<( SPRITE_FISH_1 + 3 * 3 )
           sta OBJECT_SPRITE,x
 
 
@@ -1041,8 +1049,7 @@ BHFish
           and #$03
           tay
           lda PING_PONG_TABLE,y
-          asl
-          asl
+          jsr MultiplyBy3
           clc
           adc #<SPRITE_FISH_1
           sta OBJECT_SPRITE,x
@@ -1084,7 +1091,7 @@ BHClown
           beq .UpdateTablePointer
           sta PARAM2
 
-          lda #<( SPRITE_CLOWN + 3 * 4 )
+          lda #<( SPRITE_CLOWN + 3 * 3 )
           sta OBJECT_SPRITE,x
 
 
@@ -1118,8 +1125,7 @@ BHClown
           and #$03
           tay
           lda PING_PONG_TABLE,y
-          asl
-          asl
+          jsr MultiplyBy3
           clc
           adc #<SPRITE_CLOWN
           sta OBJECT_SPRITE,x
@@ -1164,6 +1170,9 @@ BHCrab
           inc OBJECT_ANIM_DELAY,x
           lda OBJECT_ANIM_DELAY,x
           and #$04
+          beq +
+          lda #3
++
           clc
           adc CRAB_SPRITE,y
           sta OBJECT_SPRITE,x
@@ -1213,6 +1222,9 @@ BHEye
           inc OBJECT_ANIM_DELAY,x
           lda OBJECT_ANIM_DELAY,x
           and #$04
+          beq +
+          lda #3
++
           clc
           adc EYE_SPRITE,y
           sta OBJECT_SPRITE,x
@@ -1245,9 +1257,8 @@ BHDragon
           asl
           clc
           adc PARAM1
-          ;* 4 for sprite offset
-          asl
-          asl
+          ;* 3 for sprite offset
+          jsr MultiplyBy3
           sta PARAM1
           clc
           adc #<SPRITE_DRAGON
@@ -1259,7 +1270,7 @@ BHDragon
 -
           lda OBJECT_SPRITE,x
           clc
-          adc #4
+          adc #3
           sta OBJECT_SPRITE + 1,x
           lda OBJECT_SPRITE_HI,x
           adc #0
@@ -1389,9 +1400,9 @@ DragonMove
 ;100x xxxx = up
 ;101x xxxx = down
 DRAGON_MOVE_TABLE
-          !byte $80 | $1f   ;up
-          !byte $1f
-          !byte $a0 | $1f   ;down
+          ;!byte $80 | $1f   ;up
+          ;!byte $1f
+          ;!byte $a0 | $1f   ;down
 
           !byte $1f   ;!byte 0,40
           !byte $20 | $1f   ;!byte 1,40
@@ -1459,8 +1470,7 @@ BHPlatform
           inc OBJECT_ANIM_POS,x
           lda OBJECT_ANIM_POS,x
           and #$03
-          asl
-          asl
+          jsr MultiplyBy3
           clc
           adc #<SPRITE_PLATFORM
           sta OBJECT_SPRITE,x
@@ -1647,17 +1657,16 @@ BHAnt
           asl
           clc
           adc PARAM1
-          ;* 4 for sprite offset
-          asl
-          asl
+          ;* 3 for sprite offset
+          jsr MultiplyBy3
           clc
           adc #<SPRITE_ANT
           sta OBJECT_SPRITE,x
           clc
-          adc #4
+          adc #3
           sta OBJECT_SPRITE + 1,x
           clc
-          adc #4
+          adc #3
           sta OBJECT_SPRITE + 2,x
 
 .WaitDone
@@ -1747,8 +1756,7 @@ BHExtra
           lda #0
           sta OBJECT_ANIM_DELAY,x
 +
-          asl
-          asl
+          jsr MultiplyBy3
           clc
           adc #<SPRITE_EXTRA
           sta OBJECT_SPRITE,x
@@ -2100,10 +2108,10 @@ ExplodeObject
           lda #<SPRITE_ANT_DEAD_1
           sta OBJECT_SPRITE,x
           clc
-          adc #4
+          adc #3
           sta OBJECT_SPRITE + 1,x
           clc
-          adc #4
+          adc #3
           sta OBJECT_SPRITE + 2,x
 
           lda #>SPRITE_ANT_DEAD_1
@@ -2113,7 +2121,47 @@ ExplodeObject
           rts
 
 +
+          cmp #TYPE_DRAGON
+          bne +
 
+          ;kill effect
+          lda #TYPE_PLAYER_DYING
+          sta OBJECT_ACTIVE,x
+          sta OBJECT_ACTIVE + 1,x
+          sta OBJECT_ACTIVE + 2,x
+          sta OBJECT_ACTIVE + 3,x
+          sta OBJECT_ACTIVE + 4,x
+
+          lda #0
+          sta OBJECT_STATE,x
+          sta OBJECT_STATE + 1,x
+          sta OBJECT_STATE + 2,x
+          sta OBJECT_STATE + 3,x
+          sta OBJECT_STATE + 42,x
+
+          lda #<SPRITE_DRAGON_DEAD_1
+          sta OBJECT_SPRITE,x
+          clc
+          adc #3
+          sta OBJECT_SPRITE + 1,x
+          clc
+          adc #3
+          sta OBJECT_SPRITE + 2,x
+          clc
+          adc #3
+          sta OBJECT_SPRITE + 3,x
+          clc
+          adc #3
+          sta OBJECT_SPRITE + 4,x
+
+          lda #>SPRITE_DRAGON_DEAD_1
+          sta OBJECT_SPRITE_HI,x
+          sta OBJECT_SPRITE_HI + 1,x
+          sta OBJECT_SPRITE_HI + 2,x
+          sta OBJECT_SPRITE_HI + 3,x
+          sta OBJECT_SPRITE_HI + 4,x
+          rts
++
           jmp RemoveObject
 
 
@@ -2809,10 +2857,10 @@ SpawnExtra
           lda #TYPE_EXTRA
           sta PARAM3
 
-					lda PLAYER_POWERED_UP
-					beq +
+          lda PLAYER_POWERED_UP
+          beq +
 
-					;other extras as extra 2
+          ;other extras as extra 2
           lda #TYPE_EXTRA_2
           sta PARAM3
 
@@ -3599,7 +3647,7 @@ TYPE_START_SPRITE = * - 1
           !byte <SPRITE_ELEVATOR_1
           !byte <SPRITE_CRAB_L
           !byte <SPRITE_PLAYER_SHOT
-          !byte <SPRITE_ELEVATOR_1 + 4
+          !byte <SPRITE_ELEVATOR_1 + 3
           !byte <SPRITE_BEE_1
           !byte <SPRITE_FISH_1
           !byte <SPRITE_EYE_1
@@ -3610,7 +3658,7 @@ TYPE_START_SPRITE = * - 1
           !byte <SPRITE_EXPLOSION
           !byte <SPRITE_CLOWN
           !byte <SPRITE_CRYSTAL
-					!byte <SPRITE_EXTRA
+          !byte <SPRITE_EXTRA
 
 TYPE_START_SPRITE_HI = * - 1
           !byte >SPRITE_PLAYER_RUN_R_1
@@ -3622,7 +3670,7 @@ TYPE_START_SPRITE_HI = * - 1
           !byte >SPRITE_ELEVATOR_1
           !byte >SPRITE_CRAB_L
           !byte >SPRITE_PLAYER_SHOT
-          !byte >SPRITE_ELEVATOR_1 + 4
+          !byte >SPRITE_ELEVATOR_1 + 3
           !byte >SPRITE_BEE_1
           !byte >SPRITE_FISH_1
           !byte >SPRITE_EYE_1
@@ -3633,7 +3681,7 @@ TYPE_START_SPRITE_HI = * - 1
           !byte >SPRITE_EXPLOSION
           !byte >SPRITE_CLOWN
           !byte >SPRITE_CRYSTAL
-					!byte >SPRITE_EXTRA
+          !byte >SPRITE_EXTRA
 
 ;0 = player
 ;xxxx xxx1 = enemy
@@ -3673,7 +3721,7 @@ TYPE_ENEMY_TYPE_FLAGS = * - 1
           !byte 0     ;explosion
           !byte ETF_DEADLY     ;clown
           !byte ETF_EXTRA     ;crystal
-					!byte ETF_EXTRA     ;extra 2
+          !byte ETF_EXTRA     ;extra 2
 
 TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHPlayer
@@ -3696,7 +3744,7 @@ TYPE_BEHAVIOUR_LO = * - 1
           !byte <BHExplosion
           !byte <BHClown
           !byte <BHNone
-					!byte <BHExtra
+          !byte <BHExtra
 
 TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHPlayer
@@ -3719,7 +3767,7 @@ TYPE_BEHAVIOUR_HI = * - 1
           !byte >BHExplosion
           !byte >BHClown
           !byte >BHNone
-					!byte >BHExtra
+          !byte >BHExtra
 
 TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;player
@@ -3742,7 +3790,7 @@ TYPE_START_SPRITE_FLAGS = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
-					!byte SF_DIR_R | SF_START_PRIO  ;extra 2
+          !byte SF_DIR_R | SF_START_PRIO  ;extra 2
 
 
 TYPE_SPAWN_DELTA_X = * - 1
@@ -3766,7 +3814,7 @@ TYPE_SPAWN_DELTA_X = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
-					!byte 0         ;extra 2
+          !byte 0         ;extra 2
 
 ;offset added onto Y
 TYPE_SPAWN_DELTA_Y = * - 1
@@ -3790,7 +3838,7 @@ TYPE_SPAWN_DELTA_Y = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
-					!byte 0         ;extra 2
+          !byte 0         ;extra 2
 
 TYPE_SPRITE_PALETTE = * - 1
           !byte 3         ;player
@@ -3813,7 +3861,7 @@ TYPE_SPRITE_PALETTE = * - 1
           !byte 0         ;explosion
           !byte 2         ;clown
           !byte 4         ;crystal
-					!byte 5         ;extra 2
+          !byte 5         ;extra 2
 
 FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0   ;player
@@ -3836,7 +3884,7 @@ FLATTENED_ENEMY_SPRITE = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
-					!byte 0         ;extra 2
+          !byte 0         ;extra 2
 
 FLATTENED_ENEMY_SPRITE_HI = * - 1
           !byte 0   ;player
@@ -3859,7 +3907,7 @@ FLATTENED_ENEMY_SPRITE_HI = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
-					!byte 0         ;extra 2
+          !byte 0         ;extra 2
 
 TYPE_START_HP = * - 1
           !byte 0   ;player
@@ -3882,7 +3930,7 @@ TYPE_START_HP = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
-					!byte 0         ;extra 2
+          !byte 0         ;extra 2
 
 JUMP_TABLE
           !byte 6,6,5,5,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,2,2,1,1,1,0

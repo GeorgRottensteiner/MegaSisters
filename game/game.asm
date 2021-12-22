@@ -63,21 +63,20 @@ Game
           sta STAGE
           sta COLLECTED_DIAMONDS
           sta COLLECTED_DIAMONDS + 1
-					;reset the score (facepalm)
-					sta SCORE
-					sta SCORE + 1
-					sta SCORE + 2
-					sta SCORE + 3
-					sta SCORE + 4
-					sta SCORE + 5
+          ;reset the score (facepalm)
+          sta SCORE
+          sta SCORE + 1
+          sta SCORE + 2
+          sta SCORE + 3
+          sta SCORE + 4
+          sta SCORE + 5
 
           lda #CHAR_0 + 1
           sta STAGE + 1
 
 
           lda #1
-
-					lda #17
+          ;lda #17
           sta LEVEL_NR
           lda #3
           sta PLAYER_LIVES
@@ -188,8 +187,8 @@ NextLevel
           cpy #6
           bne -
 
-					lda #1
-					sta IRQ_SCROLL_OFFSET_ACTIVE
+          lda #1
+          sta IRQ_SCROLL_OFFSET_ACTIVE
 
           jsr ScreenOn
           ;fall through
@@ -197,7 +196,7 @@ NextLevel
 !zone GameLoop
 GameLoop
           ;lda #51 + SCROLL_FIRST_ROW * 8
-					lda #50 + SCROLL_FIRST_ROW * 8
+          lda #50 + SCROLL_FIRST_ROW * 8
           jsr WaitFrame
 
 ;          ;set up display for game area
@@ -777,9 +776,9 @@ HardScroll
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
-          lda #<( SPRITE_DRAGON + 1 * 4 )
+          lda #<( SPRITE_DRAGON + 1 * 3 )
           sta OBJECT_SPRITE,x
-          lda #>( SPRITE_DRAGON + 1 * 4 )
+          lda #>( SPRITE_DRAGON + 1 * 3 )
           sta OBJECT_SPRITE_HI,x
 
           lda #43
@@ -788,9 +787,9 @@ HardScroll
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
-          lda #<( SPRITE_DRAGON + 2 * 4 )
+          lda #<( SPRITE_DRAGON + 2 * 3 )
           sta OBJECT_SPRITE,x
-          lda #>( SPRITE_DRAGON + 2 * 4 )
+          lda #>( SPRITE_DRAGON + 2 * 3 )
           sta OBJECT_SPRITE_HI,x
 
           lda #45
@@ -799,9 +798,9 @@ HardScroll
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
-          lda #<( SPRITE_DRAGON + 3 * 4 )
+          lda #<( SPRITE_DRAGON + 3 * 3 )
           sta OBJECT_SPRITE,x
-          lda #>( SPRITE_DRAGON + 3 * 4 )
+          lda #>( SPRITE_DRAGON + 3 * 3 )
           sta OBJECT_SPRITE_HI,x
 
           lda #47
@@ -810,9 +809,9 @@ HardScroll
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
-          lda #<( SPRITE_DRAGON + 4 * 4 )
+          lda #<( SPRITE_DRAGON + 4 * 3 )
           sta OBJECT_SPRITE,x
-          lda #>( SPRITE_DRAGON + 4 * 4 )
+          lda #>( SPRITE_DRAGON + 4 * 3 )
           sta OBJECT_SPRITE_HI,x
 
           txa
@@ -843,9 +842,9 @@ HardScroll
           inc PARAM2
           inx
           jsr SpawnObjectInSlot
-          lda #<( SPRITE_CRYSTAL + 1 * 4 )
+          lda #<( SPRITE_CRYSTAL + 1 * 3 )
           sta OBJECT_SPRITE,x
-          lda #>( SPRITE_CRYSTAL + 1 * 4 )
+          lda #>( SPRITE_CRYSTAL + 1 * 3 )
           sta OBJECT_SPRITE_HI,x
 
           jsr ObjectMoveUp
@@ -877,9 +876,9 @@ HardScroll
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
-          lda #<( SPRITE_ANT + 1 * 4 )
+          lda #<( SPRITE_ANT + 1 * 3 )
           sta OBJECT_SPRITE,x
-          lda #>( SPRITE_ANT + 1 * 4 )
+          lda #>( SPRITE_ANT + 1 * 3 )
           sta OBJECT_SPRITE_HI,x
 
           lda #43
@@ -888,9 +887,9 @@ HardScroll
           sta PARAM3
           inx
           jsr SpawnObjectInSlot
-          lda #<( SPRITE_ANT + 2 * 4 )
+          lda #<( SPRITE_ANT + 2 * 3 )
           sta OBJECT_SPRITE,x
-          lda #>( SPRITE_ANT + 2 * 4 )
+          lda #>( SPRITE_ANT + 2 * 3 )
           sta OBJECT_SPRITE_HI,x
 
           txa
@@ -935,9 +934,9 @@ HardScroll
           inx
           jsr SpawnObjectInSlot
 
-          lda #<( SPRITE_ELEVATOR_1 + 2 * 4 )
+          lda #<( SPRITE_ELEVATOR_1 + 2 * 3 )
           sta OBJECT_SPRITE,x
-          lda #>( SPRITE_ELEVATOR_1 + 2 * 4 )
+          lda #>( SPRITE_ELEVATOR_1 + 2 * 3 )
           sta OBJECT_SPRITE_HI,x
           jmp .NextLevelDataElement
 
