@@ -41,16 +41,21 @@ CHAR_WATER_TOP_2      = FCM_CHARSET_FIRST_CHAR + 193
 
 SCROLL_FIRST_ROW = 2
 
-GUI_SCORE_OFFSET  = 1
-GUI_BONUS_OFFSET  = 13
-GUI_LIVES_OFFSET  = 20
-GUI_STAGE_OFFSET  = 28
-GUI_TIME_OFFSET   = 36
+GUI_SCORE_OFFSET  = 41 + 1
+GUI_BONUS_OFFSET  = 41 + 13
+GUI_LIVES_OFFSET  = 41 + 20
+GUI_STAGE_OFFSET  = 41 + 28
+GUI_TIME_OFFSET   = 41 + 36
 
 !zone Game
 Game
           lda #80
           sta VIC4.CHARSTEP_LO
+
+          lda #<ROW_SIZE_BYTES
+          sta VIC4.CHARSTEP_LO
+          lda #>ROW_SIZE_BYTES
+          sta VIC4.CHARSTEP_HI
 
           lda #$01
           sta VIC4.VIC4DIS
@@ -112,12 +117,14 @@ NextLevel
           ldy #0
 -
           lda GUI_BAR,x
-          sta SCREEN_CHAR,y
+          sta SCREEN_CHAR + 2 * 41,y
+          lda GUI_BAR + 40,x
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + 2 * 41,y
 
           iny
           iny
           inx
-          cpx #80
+          cpx #40
           bne -
 
           lda LEVEL_NR
@@ -127,9 +134,9 @@ NextLevel
           ldy #24
           sty PARAM2
 -
-          lda SCREEN_LINE_OFFSET_LO,y
+          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
-          lda SCREEN_LINE_OFFSET_HI,y
+          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
           ldy #5 * 2
           lda (ZEROPAGE_POINTER_1),y
@@ -150,8 +157,8 @@ NextLevel
 
           ;init timer
           lda #CHAR_9
-          sta SCREEN_CHAR + 80 + GUI_TIME_OFFSET * 2
-          sta SCREEN_CHAR + 80 + ( GUI_TIME_OFFSET + 1 ) * 2
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + GUI_TIME_OFFSET * 2
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_TIME_OFFSET + 1 ) * 2
           sta TIME_VALUE_BCD
           sta TIME_VALUE_BCD + 1
           lda #0
@@ -163,23 +170,23 @@ NextLevel
           lda PLAYER_LIVES
           clc
           adc #CHAR_0
-          sta SCREEN_CHAR + 80 + ( GUI_LIVES_OFFSET + 1 ) * 2
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_LIVES_OFFSET + 1 ) * 2
 
           lda STAGE
-          sta SCREEN_CHAR + 80 + ( GUI_STAGE_OFFSET ) * 2
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_STAGE_OFFSET ) * 2
           lda STAGE + 1
-          sta SCREEN_CHAR + 80 + ( GUI_STAGE_OFFSET + 1 ) * 2
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_STAGE_OFFSET + 1 ) * 2
 
           lda COLLECTED_DIAMONDS
-          sta SCREEN_CHAR + 80 + ( GUI_BONUS_OFFSET ) * 2
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_BONUS_OFFSET ) * 2
           lda COLLECTED_DIAMONDS + 1
-          sta SCREEN_CHAR + 80 + ( GUI_BONUS_OFFSET + 1 ) * 2
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_BONUS_OFFSET + 1 ) * 2
 
           ldx #0
           ldy #0
 -
           lda SCORE,y
-          sta SCREEN_CHAR + 80 + GUI_SCORE_OFFSET * 2,x
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + GUI_SCORE_OFFSET * 2,x
 
           inx
           inx
@@ -232,16 +239,16 @@ GameLoop
           dec TIME_VALUE
 
           ldx #1
-          lda #<( SCREEN_CHAR + 80 + 2 * GUI_TIME_OFFSET )
+          lda #<( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_TIME_OFFSET )
           sta ZEROPAGE_POINTER_5
-          lda #>( SCREEN_CHAR + 80 + 2 * GUI_TIME_OFFSET )
+          lda #>( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_TIME_OFFSET )
           sta ZEROPAGE_POINTER_5 + 1
 
           jsr DecreaseValue
 
-          lda SCREEN_CHAR + 80 + ( GUI_TIME_OFFSET + 0 ) * 2
+          lda SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_TIME_OFFSET + 0 ) * 2
           sta TIME_VALUE_BCD
-          lda SCREEN_CHAR + 80 + ( GUI_TIME_OFFSET + 1 ) * 2
+          lda SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_TIME_OFFSET + 1 ) * 2
           sta TIME_VALUE_BCD + 1
 ++
 .NoTimerTick
@@ -425,9 +432,9 @@ UpdateDust
 
           dec DUST_POS,x
           ldy DUST_Y,x
-          lda SCREEN_LINE_OFFSET_LO,y
+          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
           sta ZEROPAGE_POINTER_2
-          lda SCREEN_LINE_OFFSET_HI,y
+          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_2 + 1
 
           ldy DUST_X,x
@@ -455,7 +462,7 @@ UpdateDust
           ;second line
           tya
           clc
-          adc #38 * 2
+          adc #( ROW_SIZE - 2 ) * 2
           tay
           cpy #80
           bcc .Skip3
@@ -577,8 +584,8 @@ HardScroll
 -
 
 !for SCREEN_ROW = SCROLL_FIRST_ROW to 24
-          lda SCREEN_CHAR + 2 + SCREEN_ROW * 80,x
-          sta SCREEN_CHAR + 0 + SCREEN_ROW * 80,x
+          lda SCREEN_CHAR + 41 * 2 + 2 + SCREEN_ROW * ROW_SIZE_BYTES,x
+          sta SCREEN_CHAR + 41 * 2 + 0 + SCREEN_ROW * ROW_SIZE_BYTES,x
 !end
           inx
           inx
@@ -588,7 +595,7 @@ HardScroll
           ;empty rightmost column
 !for SCREEN_ROW = SCROLL_FIRST_ROW to 24
           lda #CHAR_EMPTY
-          sta SCREEN_CHAR + 78 + SCREEN_ROW * 80
+          sta SCREEN_CHAR + ( ROW_SIZE_BYTES - 6 ) + SCREEN_ROW * ROW_SIZE_BYTES
 !end
 
           ;check for new elements?
@@ -1323,9 +1330,9 @@ NextLive
           dec PLAYER_LIVES
 
           ldx #1
-          lda #<( SCREEN_CHAR + 80 + 2 * GUI_LIVES_OFFSET )
+          lda #<( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_LIVES_OFFSET )
           sta ZEROPAGE_POINTER_5
-          lda #>( SCREEN_CHAR + 80 + 2 * GUI_LIVES_OFFSET )
+          lda #>( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_LIVES_OFFSET )
           sta ZEROPAGE_POINTER_5 + 1
           jsr DecreaseValue
 
@@ -1348,7 +1355,7 @@ NextLive
           ldx #0
           ldy #0
 -
-          lda SCREEN_CHAR + 80 + GUI_SCORE_OFFSET * 2,x
+          lda SCREEN_CHAR + ROW_SIZE_BYTES + GUI_SCORE_OFFSET * 2,x
           sta SCORE,y
 
           inx
@@ -1358,9 +1365,9 @@ NextLive
           bne -
 
 
-          lda SCREEN_CHAR + 80 + GUI_BONUS_OFFSET * 2
+          lda SCREEN_CHAR + ROW_SIZE_BYTES + GUI_BONUS_OFFSET * 2
           sta COLLECTED_DIAMONDS
-          lda SCREEN_CHAR + 80 + ( GUI_BONUS_OFFSET + 1 ) * 2
+          lda SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_BONUS_OFFSET + 1 ) * 2
           sta COLLECTED_DIAMONDS + 1
 
           jmp Respawn
@@ -1543,9 +1550,9 @@ LeaveSecretStage
           bne -
 
           ;replace secret stage entry with bridge
-          lda SCREEN_LINE_OFFSET_LO + 24
+          lda SCREEN_LINE_COLLISION_OFFSET_LO + 24
           sta ZEROPAGE_POINTER_1
-          lda SCREEN_LINE_OFFSET_HI + 24
+          lda SCREEN_LINE_COLLISION_OFFSET_HI + 24
           sta ZEROPAGE_POINTER_1 + 1
 
           lda #CHAR_BRIDGE_1
@@ -1641,12 +1648,12 @@ LEVEL_ELEMENT_ORIG_POS_HI
 
 SCREEN_COLUMN_POS_LO
 !for SCREEN_ROW = 0 to 24
-          !byte <( SCREEN_CHAR + SCREEN_ROW * 80 + 78 )
+          !byte <( SCREEN_CHAR + SCREEN_ROW * ROW_SIZE_BYTES + ROW_SIZE_BYTES - 6 )
 !end
 
 SCREEN_COLUMN_POS_HI
 !for SCREEN_ROW = 0 to 24
-          !byte >( SCREEN_CHAR + SCREEN_ROW * 80 + 78 )
+          !byte >( SCREEN_CHAR + SCREEN_ROW * ROW_SIZE_BYTES + ROW_SIZE_BYTES - 6 )
 !end
 
 

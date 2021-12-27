@@ -1,6 +1,7 @@
 ﻿!zone ZP
   .Screen = $02
   .Color  = $06
+  .ScreenL = $0a
 
 COLOR_RAM   = $ff80000
 
@@ -21,26 +22,24 @@ WaitFrame
 !zone GenerateRandomNumber
 GenerateRandomNumber
           lda $dc04
-          ;eor RANDOM_SEED
           eor $dc05
           eor $dd04
           adc $dd05
           eor $dd06
           eor $dd07
-          ;sta RANDOM_SEED
           rts
 
 
 
-!zone ScreenClear32bitAddr
+!zone ScreenClear32bitAddrNoRRB
 ;a = clear char (lo byte)
-ScreenClear32bitAddr
+ScreenClear32bitAddrNoRRB
           ldx #>( CHARSET_LOCATION / 64 )
           stx PARAM2
 
 ;a = clear char (lo byte)
 ;PARAM2 = clear char (hi byte)
-ScreenClear32bitAddrWithAlternativeHiByte
+ScreenClear32bitAddrWithAlternativeHiByteNoRRB
           sta PARAM1
           ldx #7
 
@@ -108,6 +107,101 @@ ScreenClear32bitAddrWithAlternativeHiByte
           inz
           cpz #208
           bne -
+
+          rts
+
+
+
+!zone ScreenClear32bitAddr
+;a = clear char (lo byte)
+ScreenClear32bitAddr
+          ldx #>( CHARSET_LOCATION / 64 )
+          stx PARAM2
+
+;a = clear char (lo byte)
+;PARAM2 = clear char (hi byte)
+ScreenClear32bitAddrWithAlternativeHiByte
+          sta PARAM1
+          ldx #25
+
+          lda #<( COLOR_RAM + 41 * 2 )
+          sta ZP.Color + 0
+          lda #>( COLOR_RAM + 41 * 2 )
+          sta ZP.Color + 1
+          lda #( ( COLOR_RAM + 41 * 2 ) >> 16 ) & $ff
+          sta ZP.Color + 2
+          lda #( ( COLOR_RAM + 41 * 2 ) >> 24 )
+          sta ZP.Color + 3
+
+          lda #<( SCREEN_CHAR + 41 * 2 )
+          sta ZP.Screen + 0
+          lda #>( SCREEN_CHAR + 41 * 2 )
+          sta ZP.Screen + 1
+          lda #( SCREEN_CHAR + 41 * 2 ) >> 16
+          sta ZP.Screen + 2
+          lda #$00
+          sta ZP.Screen + 3
+
+          lda #<( SCREEN_CHAR )
+          sta ZP.ScreenL + 0
+          lda #>( SCREEN_CHAR )
+          sta ZP.ScreenL + 1
+          lda #( SCREEN_CHAR ) >> 16
+          sta ZP.ScreenL + 2
+          lda #$00
+          sta ZP.ScreenL + 3
+
+--
+          ldz #$00
+-
+          ;lo byte
+          lda PARAM1
+          sta [ZP.Screen], z
+          sta [ZP.ScreenL], z
+          lda #$00
+          sta [ZP.Color], z
+          inz
+
+          ;hi byte
+          ;force chars to $100!
+          lda PARAM2
+          sta [ZP.Screen], z
+          sta [ZP.ScreenL], z
+          lda #0
+          sta [ZP.Color], z
+
+          inz
+          cpz #80
+          bne -
+
+          lda ZP.Screen
+          clc
+          adc #ROW_SIZE_BYTES
+          sta ZP.Screen
+          bcc +
+          inc ZP.Screen + 1
++
+
+          lda ZP.ScreenL
+          clc
+          adc #ROW_SIZE_BYTES
+          sta ZP.ScreenL
+          bcc +
+          inc ZP.ScreenL + 1
++
+
+
+          lda ZP.Color
+          clc
+          adc #ROW_SIZE_BYTES
+          sta ZP.Color
+          bcc +
+          inc ZP.Color + 1
++
+
+
+          dex
+          bne --
 
           rts
 

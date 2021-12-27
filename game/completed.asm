@@ -25,11 +25,11 @@ CompletedGame
           ldy #0
 -
           lda GUI_BAR + 11 * 40,x
-          sta SCREEN_CHAR + 9  * 80,y
+          sta SCREEN_CHAR + 9  * ROW_SIZE_BYTES,y
           lda GUI_BAR + 12 * 40,x
-          sta SCREEN_CHAR + 11 * 80,y
+          sta SCREEN_CHAR + 11 * ROW_SIZE_BYTES,y
           lda GUI_BAR + 13 * 40,x
-          sta SCREEN_CHAR + 13 * 80,y
+          sta SCREEN_CHAR + 13 * ROW_SIZE_BYTES,y
 
           iny
           iny

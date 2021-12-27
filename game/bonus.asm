@@ -9,7 +9,7 @@ BonusMode
           ldx #0
           ldy #0
 -
-          lda SCREEN_CHAR + 80 + GUI_SCORE_OFFSET * 2,x
+          lda SCREEN_CHAR + ROW_SIZE_BYTES + GUI_SCORE_OFFSET * 2,x
           sta SCORE,y
 
           inx
@@ -19,9 +19,9 @@ BonusMode
           bne -
 
 
-          lda SCREEN_CHAR + 80 + GUI_BONUS_OFFSET * 2
+          lda SCREEN_CHAR + ROW_SIZE_BYTES + GUI_BONUS_OFFSET * 2
           sta COLLECTED_DIAMONDS
-          lda SCREEN_CHAR + 80 + ( GUI_BONUS_OFFSET + 1 ) * 2
+          lda SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_BONUS_OFFSET + 1 ) * 2
           sta COLLECTED_DIAMONDS + 1
 
           lda #0
@@ -44,24 +44,28 @@ BonusMode
           ldy #0
 -
           lda GUI_BAR + 80,x
-          sta SCREEN_CHAR + 11 * 80,y
+          sta SCREEN_CHAR + 11 * ROW_SIZE_BYTES,y
+          lda GUI_BAR + 80 + 40,x
+          sta SCREEN_CHAR + 12 * ROW_SIZE_BYTES,y
+          lda GUI_BAR + 80 + 80,x
+          sta SCREEN_CHAR + 13 * ROW_SIZE_BYTES,y
 
           iny
           iny
           inx
-          cpx #120
+          cpx #40
           bne -
 
           lda TIME_VALUE_BCD
-          sta SCREEN_CHAR + 13 * 80 + BONUS_TIME_OFFSET * 2
+          sta SCREEN_CHAR + 13 * ROW_SIZE_BYTES + BONUS_TIME_OFFSET * 2
           lda TIME_VALUE_BCD + 1
-          sta SCREEN_CHAR + 13 * 80 + ( BONUS_TIME_OFFSET + 1 ) * 2
+          sta SCREEN_CHAR + 13 * ROW_SIZE_BYTES + ( BONUS_TIME_OFFSET + 1 ) * 2
 
           ldx #0
           ldy #0
 -
           lda SCORE,y
-          sta SCREEN_CHAR + 13 * 80 + 2 * BONUS_SCORE_OFFSET,x
+          sta SCREEN_CHAR + 13 * ROW_SIZE_BYTES + 2 * BONUS_SCORE_OFFSET,x
 
           inx
           inx
@@ -136,7 +140,7 @@ BonusLoop
           ldx #0
           ldy #0
 -
-          lda SCREEN_CHAR + 13 * 80 + 2 * BONUS_SCORE_OFFSET,x
+          lda SCREEN_CHAR + 13 * ROW_SIZE_BYTES + 2 * BONUS_SCORE_OFFSET,x
           sta SCORE,y
 
           inx
@@ -173,17 +177,17 @@ BonusTick
           jsr PlaySoundEffect
 
           ldx #4
-          lda #<( SCREEN_CHAR + 13 * 80 + 2 * BONUS_SCORE_OFFSET )
+          lda #<( SCREEN_CHAR + 13 * ROW_SIZE_BYTES + 2 * BONUS_SCORE_OFFSET )
           sta ZEROPAGE_POINTER_5
-          lda #>( SCREEN_CHAR + 13 * 80 + 2 * BONUS_SCORE_OFFSET )
+          lda #>( SCREEN_CHAR + 13 * ROW_SIZE_BYTES + 2 * BONUS_SCORE_OFFSET )
           sta ZEROPAGE_POINTER_5 + 1
 
           jsr IncreaseValue
 
           ldx #1
-          lda #<( SCREEN_CHAR + 13 * 80 + 2 * BONUS_TIME_OFFSET )
+          lda #<( SCREEN_CHAR + 13 * ROW_SIZE_BYTES + 2 * BONUS_TIME_OFFSET )
           sta ZEROPAGE_POINTER_5
-          lda #>( SCREEN_CHAR + 13 * 80 + 2 * BONUS_TIME_OFFSET )
+          lda #>( SCREEN_CHAR + 13 * ROW_SIZE_BYTES + 2 * BONUS_TIME_OFFSET )
           sta ZEROPAGE_POINTER_5 + 1
 
           jmp DecreaseValue

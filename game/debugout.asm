@@ -4,7 +4,9 @@ Debug
           sty LOCAL2
           sta LOCAL3
 
-					sei
+          jsr ScreenOn
+
+          sei
 
           lda #32
           ldx #0

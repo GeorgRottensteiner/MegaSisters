@@ -2237,9 +2237,9 @@ ExplodeObject
           jsr PlaySoundEffect
 
           ;score +50
-          lda #<( SCREEN_CHAR + 80 + 2 * GUI_SCORE_OFFSET )
+          lda #<( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_SCORE_OFFSET )
           sta ZEROPAGE_POINTER_5
-          lda #>( SCREEN_CHAR + 80 + 2 * GUI_SCORE_OFFSET )
+          lda #>( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_SCORE_OFFSET )
           sta ZEROPAGE_POINTER_5 + 1
 
           lda #5
@@ -2275,9 +2275,9 @@ FlattenEnemy
           jsr PlaySoundEffect
 
           ;score +50
-          lda #<( SCREEN_CHAR + 80 + 2 * GUI_SCORE_OFFSET )
+          lda #<( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_SCORE_OFFSET )
           sta ZEROPAGE_POINTER_5
-          lda #>( SCREEN_CHAR + 80 + 2 * GUI_SCORE_OFFSET )
+          lda #>( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_SCORE_OFFSET )
           sta ZEROPAGE_POINTER_5 + 1
 
           lda #5
@@ -2385,7 +2385,7 @@ IsCharBlocking
           bcc .NotDeadly
 
           cpx #0
-          bne .NotBlocking
+          lbne .NotBlocking
 
           ;deadly char hit
           lda MOVING_DIR
@@ -2417,43 +2417,65 @@ IsCharBlocking
           sbc #CHAR_DIAMOND_1
           tay
 
-          lda DIAMOND_OFFSET,y
-          clc
-          adc .X_POS
-          tay
-          sty PARAM1
-          lsr PARAM1
-
-          lda PARAM1
-          cmp #40
-          bcc +
-          sec
-          sbc #40
-          sta PARAM1
-+
-          dec PARAM1
-
+          ;set ZEROPAGE_POINTER_2 to top left corner of diamond
           lda ZEROPAGE_POINTER_1
           sec
-          sbc #41 * 2
+          sbc DIAMOND_OFFSET_RRB,y
           sta ZEROPAGE_POINTER_2
           lda ZEROPAGE_POINTER_1 + 1
           sbc #0
           sta ZEROPAGE_POINTER_2 + 1
 
+          lda ZEROPAGE_POINTER_2
+          clc
+          adc .X_POS
+          sta ZEROPAGE_POINTER_2
+          bcc +
+          inc ZEROPAGE_POINTER_2 + 1
++
+
+          ;.X_POS has offset of original ZEROPAGE_POINTER_1
+          lda .X_POS
+          sec
+          sbc DIAMOND_X_OFFSET,y
+          sta .X_POS
+
+          ;get in game x pos of diamond (RRB x - 41 * 2 ) / 2
+          ;jmp Debug
+
+          ;sec
+          ;sbc #41 * 2
+          lsr
+          sta PARAM1
+
+          ldy #0
+
+          ldx PARAM1
+          cpx #$7f
+          beq .CutLeftChar
+
           lda #CHAR_EMPTY
           sta (ZEROPAGE_POINTER_2),y
+.CutLeftChar
           iny
           iny
+          lda #CHAR_EMPTY
           sta (ZEROPAGE_POINTER_2),y
           tya
           clc
-          adc #39 * 2
+          adc #ROW_SIZE_BYTES - 2
           tay
+
+          ldx PARAM1
+          cpx #$7f
+          beq .CutLeftChar2
+
           lda #CHAR_EMPTY
           sta (ZEROPAGE_POINTER_2),y
+.CutLeftChar2
           iny
           iny
+          lda #CHAR_EMPTY
           sta (ZEROPAGE_POINTER_2),y
 
           ;spawn diamond (and increase bonus counter)
@@ -2498,9 +2520,9 @@ PickedDiamond
 
 .NoDiamondSpawned
           ;score +25
-          lda #<( SCREEN_CHAR + 80 + 2 * GUI_SCORE_OFFSET )
+          lda #<( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_SCORE_OFFSET )
           sta ZEROPAGE_POINTER_5
-          lda #>( SCREEN_CHAR + 80 + 2 * GUI_SCORE_OFFSET )
+          lda #>( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_SCORE_OFFSET )
           sta ZEROPAGE_POINTER_5 + 1
 
           lda #2
@@ -2513,9 +2535,9 @@ PickedDiamond
 
           ;bonus
           ldx #1
-          lda #<( SCREEN_CHAR + 80 + 2 * GUI_BONUS_OFFSET )
+          lda #<( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_BONUS_OFFSET )
           sta ZEROPAGE_POINTER_5
-          lda #>( SCREEN_CHAR + 80 + 2 * GUI_BONUS_OFFSET )
+          lda #>( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_BONUS_OFFSET )
           sta ZEROPAGE_POINTER_5 + 1
           jsr IncreaseValue
 
@@ -2531,15 +2553,15 @@ PickedDiamond
           sta BONUS_COUNT
 
           ldx #1
-          lda #<( SCREEN_CHAR + 80 + 2 * GUI_LIVES_OFFSET )
+          lda #<( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_LIVES_OFFSET )
           sta ZEROPAGE_POINTER_5
-          lda #>( SCREEN_CHAR + 80 + 2 * GUI_LIVES_OFFSET )
+          lda #>( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_LIVES_OFFSET )
           sta ZEROPAGE_POINTER_5 + 1
           jsr IncreaseValue
 
           lda #CHAR_0
-          sta SCREEN_CHAR + 80 + 2 * GUI_BONUS_OFFSET
-          sta SCREEN_CHAR + 80 + 2 * ( GUI_BONUS_OFFSET + 1 )
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_BONUS_OFFSET
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + 2 * ( GUI_BONUS_OFFSET + 1 )
 +
 
 
@@ -2554,10 +2576,14 @@ PickedDiamond
 
           ;offset in screen data
 DIAMOND_OFFSET
-          !byte 41 * 2,40 * 2,1 * 2,0 * 2
+          !byte ( 40 + 1 ) * 2, 40 * 2, 1 * 2,0 * 2
 
+DIAMOND_OFFSET_RRB
+          ;!byte ( ROW_SIZE + 1 ) * 2, ROW_SIZE * 2, 1 * 2,0 * 2
+          !byte 0 * 2, 1 * 2, ROW_SIZE * 2, ( ROW_SIZE + 1 ) * 2
 
-
+DIAMOND_X_OFFSET
+          !byte 0,2,0,2
 
 !zone HitStarBlock
 ;x = player index
@@ -2583,7 +2609,7 @@ HitStarBlock
 .LeftChar
           lda ZEROPAGE_POINTER_1
           sec
-          sbc #80
+          sbc #ROW_SIZE_BYTES
           sta ZEROPAGE_POINTER_2
 
           lda ZEROPAGE_POINTER_1 + 1
@@ -2612,9 +2638,9 @@ HitStarBlock
           sta (ZEROPAGE_POINTER_2),y
           tya
           clc
-          adc #38 * 2
+          adc #( ROW_SIZE - 2 ) * 2
           tay
-          cpy #80
+          cpy #ROW_SIZE_BYTES
           bcc .Skip3
 
           lda #CHAR_EMPTY_BLOCK_1 + 3
@@ -2622,7 +2648,7 @@ HitStarBlock
 .Skip3
           iny
           iny
-          cpy #80
+          cpy #ROW_SIZE_BYTES
           bcc .Skip4
 
           lda #CHAR_EMPTY_BLOCK_1 + 4
@@ -2649,7 +2675,7 @@ HitStarBlock
           ;spawn diamond (and increase bonus counter)
           tya
           sec
-          sbc #41 * 2
+          sbc #( ROW_SIZE + 1 ) * 2
           lsr
           sta PARAM1
 
@@ -2705,7 +2731,7 @@ HitBrickBlock
 .LeftChar
           lda ZEROPAGE_POINTER_1
           sec
-          sbc #80
+          sbc #ROW_SIZE_BYTES
           sta ZEROPAGE_POINTER_2
 
           lda ZEROPAGE_POINTER_1 + 1
@@ -2778,9 +2804,9 @@ HitBrickBlock
           sta (ZEROPAGE_POINTER_2),y
           tya
           clc
-          adc #38 * 2
+          adc #( ROW_SIZE - 2 ) * 2
           tay
-          cpy #80
+          cpy #ROW_SIZE_BYTES
           bcc .Skip3
 
           lda DUST_CHAR_4,x
@@ -2788,7 +2814,7 @@ HitBrickBlock
 .Skip3
           iny
           iny
-          cpy #80
+          cpy #ROW_SIZE_BYTES
           bcc .Skip4
 
           lda DUST_CHAR_5,x
@@ -2807,7 +2833,7 @@ HitBrickBlock
           ;spawn diamond (and increase bonus counter)
           tya
           sec
-          sbc #41 * 2
+          sbc #( ROW_SIZE + 1 ) * 2
           lsr
           sta PARAM1
 
@@ -2845,7 +2871,7 @@ HitBrickBlock
 SpawnExtra
           tya
           sec
-          sbc #41 * 2
+          sbc #( ROW_SIZE + 1 ) * 2
           lsr
           sta PARAM1
 
@@ -2922,11 +2948,11 @@ HandleObjectFall
           bcs .CanFall
 
           iny
-          lda SCREEN_LINE_OFFSET_LO,y
+          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
 
           ;current screen high
-          lda SCREEN_LINE_OFFSET_HI,y
+          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
 
           lda OBJECT_CHAR_POS_X,x
@@ -3095,9 +3121,9 @@ ObjectMoveDownBlocking
           bcs .NotBlocked
 
 
-          lda SCREEN_LINE_OFFSET_LO,y
+          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
-          lda SCREEN_LINE_OFFSET_HI,y
+          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
 
           inc PARAM2
@@ -3129,9 +3155,9 @@ ObjectMoveDownBlocking
           beq .NotBlocked
           bcs .NotBlocked
 
-          lda SCREEN_LINE_OFFSET_LO,y
+          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
-          lda SCREEN_LINE_OFFSET_HI,y
+          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
 
           lda OBJECT_CHAR_POS_X,x
@@ -3175,11 +3201,11 @@ ObjectMoveUpBlocking
           bcs .CanMove
 
 
-          lda SCREEN_LINE_OFFSET_LO,y
+          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
 
           ;current screen high
-          lda SCREEN_LINE_OFFSET_HI,y
+          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
 
           lda OBJECT_CHAR_POS_X,x
@@ -3349,11 +3375,11 @@ ObjectMoveLeftBlocking
           beq .CheckNextY
           bcs .CheckNextY
 
-          lda SCREEN_LINE_OFFSET_LO,y
+          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
 
           ;current screen high
-          lda SCREEN_LINE_OFFSET_HI,y
+          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
 
           ldy OBJECT_CHAR_POS_X,x
@@ -3419,11 +3445,11 @@ ObjectMoveRightBlocking
           beq .CheckNextY
           bcs .CheckNextY
 
-          lda SCREEN_LINE_OFFSET_LO,y
+          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
           sta ZEROPAGE_POINTER_1
 
           ;current screen high
-          lda SCREEN_LINE_OFFSET_HI,y
+          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
 
           ldy OBJECT_CHAR_POS_X,x
@@ -4006,12 +4032,22 @@ BLOCK_BORDER_R
 
 SCREEN_LINE_OFFSET_LO
 !for SCREEN_ROW = 0 to 24
-          !byte <( SCREEN_CHAR + SCREEN_ROW * 80 )
+          !byte <( SCREEN_CHAR + SCREEN_ROW * ROW_SIZE_BYTES )
 !end
 
 SCREEN_LINE_OFFSET_HI
 !for SCREEN_ROW = 0 to 24
-          !byte >( SCREEN_CHAR + SCREEN_ROW * 80 )
+          !byte >( SCREEN_CHAR + SCREEN_ROW * ROW_SIZE_BYTES )
+!end
+
+SCREEN_LINE_COLLISION_OFFSET_LO
+!for SCREEN_ROW = 0 to 24
+          !byte <( SCREEN_CHAR + 2 * 41 + SCREEN_ROW * ROW_SIZE_BYTES )
+!end
+
+SCREEN_LINE_COLLISION_OFFSET_HI
+!for SCREEN_ROW = 0 to 24
+          !byte >( SCREEN_CHAR + 2 * 41 + SCREEN_ROW * ROW_SIZE_BYTES )
 !end
 
 

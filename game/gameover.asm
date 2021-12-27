@@ -6,8 +6,8 @@ GameOver
           lda #1
           jsr MUSIC_PLAYER
 
-          lda #80
-          sta VIC4.CHARSTEP_LO
+          ;lda #80
+          ;sta VIC4.CHARSTEP_LO
 
           lda #0
           sta VIC.SPRITE_ENABLE
@@ -29,7 +29,7 @@ GameOver
           ldy #0
 -
           lda GUI_BAR + 10 * 40,x
-          sta SCREEN_CHAR + 11 * 80,y
+          sta SCREEN_CHAR + 11 * ROW_SIZE_BYTES,y
 
           iny
           iny

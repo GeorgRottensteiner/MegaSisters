@@ -25,20 +25,22 @@ GetReady
           ldy #0
 -
           lda GUI_BAR + 5 * 40,x
-          sta SCREEN_CHAR + 9 * 80,y
-          lda GUI_BAR + 5 * 40 + 5 * 20,x
-          sta SCREEN_CHAR + 9 * 80 + 5 * 40,y
+          sta SCREEN_CHAR + 41 * 2 + 9 * ROW_SIZE_BYTES,y
+          lda GUI_BAR + 7 * 40,x
+          sta SCREEN_CHAR + 41 * 2 + 11 * ROW_SIZE_BYTES,y
+          lda GUI_BAR + 9 * 40,x
+          sta SCREEN_CHAR + 41 * 2 + 13 * ROW_SIZE_BYTES,y
 
           iny
           iny
           inx
-          cpx #5 * 20
+          cpx #40
           bne -
 
           lda STAGE
-          sta SCREEN_CHAR + 9 * 80 + 4 * 80 + GETREADY_STAGE_OFFSET * 2
+          sta SCREEN_CHAR + 41 * 2 + 9 * ROW_SIZE_BYTES + 4 * ROW_SIZE_BYTES + GETREADY_STAGE_OFFSET * 2
           lda STAGE + 1
-          sta SCREEN_CHAR + 9 * 80 + 4 * 80 + ( GETREADY_STAGE_OFFSET + 1 ) * 2
+          sta SCREEN_CHAR + 41 * 2 + 9 * ROW_SIZE_BYTES + 4 * ROW_SIZE_BYTES + ( GETREADY_STAGE_OFFSET + 1 ) * 2
 
           lda #120
           sta GET_READY_DELAY

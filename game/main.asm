@@ -10,8 +10,23 @@ BORDER_WIDTH = $58    ;38 column border width
 CHARSET_LOCATION      = $10000
 ;LOGO_CHARSET_LOCATION = $20000
 
-SCREEN_CHAR = $0800
+;SCREEN_CHAR = $0800
 SCREEN_COLOR = $d800
+
+GOTOX             = $10
+TRANSPARENT       = $80
+
+;   40    characters screen width
+;   +1    first GOTOX statement
+;   +40   chars
+;   +1    final right most GOTOX statement
+;   +1    pseudo char
+; = 83
+
+ROW_SIZE          = 83
+
+;we use 16bit characters
+ROW_SIZE_BYTES    = ROW_SIZE * 2
 
 MUSIC_PLAYER = $4000
 
@@ -143,12 +158,22 @@ ENTRY_POINT
           lda #>SPRITE_POINTER_BASE
           sta VIC4.SPRPTRADR_HI
 
+          ;Relocate screen RAM using $d060-$d063
+          lda #<SCREEN_CHAR
+          sta VIC4.SCRNPTR
+          lda #>SCREEN_CHAR
+          sta VIC4.SCRNPTR + 1
+          lda #$00
+          sta VIC4.SCRNPTR + 2
+          sta VIC4.EXGLYPH_CHRCOUNT_SCRNPTR
+
           ;enable 16bit sprite pointers (plus upper 7bits of sprite pointer list address)
           lda #$80
           sta VIC4.SPRPTR16
 
-          jmp Credits
+          ;jsr SetPalette
           ;jmp Title
+          jmp Credits
 
 
 
@@ -213,13 +238,16 @@ GUI_BAR
 ;!bin "everlasting.prg",,2
 !bin "MSI-Mega_Giana_Sisters.sid",,$7e
 
+SCREEN_CHAR
+          !fill $1036
+
 
 !source "stages.asm"
 
 PALETTE_DATA_SPRITES
           !media "megasisters.spriteproject",PALETTESWIZZLED,0,NUM_SPRITE_PALETTES * 16
 
-!media "bg1.charscreen",CHAR
+;!media "bg1.charscreen",CHAR
 
 !source "objects.asm"
 
