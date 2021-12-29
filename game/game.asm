@@ -113,6 +113,8 @@ NextLevel
           lda #CHAR_EMPTY
           jsr ScreenClear32bitAddr
 
+          jsr SetupBackground
+
           ldx #0
           ldy #0
 -
@@ -515,6 +517,29 @@ ScrollBy1Pixel
           rts
 
 .NeedToScroll
+
+          ;fix GOTOX offsets for upper layer
+          lda SCROLL_POS
+          dec
+          and #$07
+          sta LOCAL1
+
+          ldx #2
+-
+          lda SCREEN_LINE_OFFSET_LO, x
+          sta ZEROPAGE_POINTER_1
+          lda SCREEN_LINE_OFFSET_HI, x
+          sta ZEROPAGE_POINTER_1 + 1
+
+          ;offset 0 so it starts at the left border
+          ldy #80
+          lda LOCAL1
+          sta (ZEROPAGE_POINTER_1),y
+
+          inx
+          cpx #25
+          bne -
+
           dec SCROLL_POS
           bpl .NoHardScroll
 
@@ -1751,7 +1776,7 @@ BUTTON_RELEASED
 
 
 LEVEL_BACKGROUND_COLOR_INDEX
-          !byte 46      ;overworld
+          !byte 48    ;46       ;overworld
           !byte 3      ;underground
           !byte 3      ;water lands
           !byte 3      ;castle

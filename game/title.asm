@@ -12,6 +12,8 @@ Title
           lda #CHAR_EMPTY
           jsr ScreenClear32bitAddr
 
+          jsr SetupBackground
+
           ;Set logical row width
           ;bytes per screen row (16 bit value in $d058-$d059)
           lda #<ROW_SIZE_BYTES
@@ -119,7 +121,7 @@ TitleLoop
           clc
           adc PARAM1
           ;$50-scroll(0-15)
-          sta VIC4.TEXTXPOS
+          ;sta VIC4.TEXTXPOS
 
           lda #252
           jsr WaitFrame

@@ -3,7 +3,7 @@
 !source <c64.asm>
 !source <mega65.asm>
 
-;CHEATS_ENABLED
+CHEATS_ENABLED
 
 BORDER_WIDTH = $58    ;38 column border width
 
@@ -112,7 +112,7 @@ ENTRY_POINT
           ;;Disable C65 rom write protection
           ;;$20000 - $3ffff
           lda #$70
-          sta $d640
+          sta Mega65.HTRAP00
           eom
 
           ;bank out C65 ROM
@@ -128,6 +128,23 @@ ENTRY_POINT
           ;force PAL mode
           lda #$80
           trb VIC4.PALNTSC_VGAHDTV_RASLINE0
+
+          ;lda #$80
+          ;trb VIC4.NORRDEL_DBLRR_XPOS
+
+          ;RRB no double buffer
+          ;lda #$40
+          ;tsb VIC4.NORRDEL_DBLRR_XPOS
+
+          ;Enable double line RRB to double the time for RRB operations
+          ;by setting V400 mode, enabling bit 6 in $d051 and setting $d05b Y scale to 0
+          lda #$08
+          tsb VIC3.VICDIS
+          lda #$40
+          tsb VIC4.NORRDEL_DBLRR_XPOS
+          lda #$00
+          sta VIC4.CHRYSCL
+
 
           lda #0
           sta VIC.BORDER_COLOR
@@ -247,7 +264,8 @@ SCREEN_CHAR
 PALETTE_DATA_SPRITES
           !media "megasisters.spriteproject",PALETTESWIZZLED,0,NUM_SPRITE_PALETTES * 16
 
-;!media "bg1.charscreen",CHAR
+BACKGROUND_1
+          !media "bg1.charscreen",CHAR
 
 !source "objects.asm"
 

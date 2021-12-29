@@ -314,7 +314,7 @@ ScreenOn
           lda #20
           jsr WaitFrame
 
-          lda #BORDER_WIDTH
+          lda #BORDER_WIDTH + 8
           sta VIC4.SIDBDRWD
 
           lda VIC4.HOTREG
@@ -338,6 +338,52 @@ MultiplyBy3
 .TEMP
           !byte 0
 
+
+!zone SetupBackground
+SetupBackground
+          lda #<BACKGROUND_1
+          sta .ReadPos
+
+          lda #>BACKGROUND_1
+          sta .ReadPos + 1
+
+          ldy #0
+          sty PARAM2
+
+--
+          ldy PARAM2
+          lda SCREEN_LINE_OFFSET_LO,y
+          sta ZEROPAGE_POINTER_2
+          lda SCREEN_LINE_OFFSET_HI,y
+          sta ZEROPAGE_POINTER_2 + 1
+
+          ldy #0
+          ldx #0
+-
+
+.ReadPos = * + 1
+          lda $ffff,x
+          sta (ZEROPAGE_POINTER_2),y
+          inx
+          inx
+          iny
+          iny
+          cpy #40 * 2
+          bne -
+
+          lda .ReadPos
+          clc
+          adc #80
+          sta .ReadPos
+          bcc +
+          inc .ReadPos + 1
++
+          inc PARAM2
+          lda PARAM2
+          cmp #25
+          bne --
+
+          rts
 
 
 
