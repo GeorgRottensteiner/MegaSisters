@@ -3,15 +3,33 @@ Credits
           lda #252
           jsr WaitFrame
 
+          ;set credits palette
+          lda #%01011001
+          sta VIC4.PALSEL
+
+
+          ;copy palette data (CHAR_PALETTE_ENTRY_COUNT entries),
+          ldx #0
+          ldy #0
+-
+
+          lda LOGO_CHARSET_PALETTE, x
+          sta VIC4.PALRED,y
+          lda LOGO_CHARSET_PALETTE + 1 * 256, x
+          sta VIC4.PALGREEN,y
+          lda LOGO_CHARSET_PALETTE + 2 * 256, x
+          sta VIC4.PALBLUE,y
+
+          iny
+          inx
+          bne -
+
           lda #80
           sta VIC4.CHARSTEP_LO
 
           lda #0
           sta VIC.SPRITE_ENABLE
           sta VIC.BACKGROUND_COLOR
-
-          ;lda #$50 - 8
-          ;sta VIC4.TEXTXPOS
 
           lda #$07
           sta VIC4.VIC4DIS
@@ -21,43 +39,35 @@ Credits
           stx PARAM2
           jsr ScreenClear32bitAddrWithAlternativeHiByteNoRRB
 
-          lda #<( LOGO_CHARSET_SOURCE / 64 )
-          sta .LO
-          lda #>( LOGO_CHARSET_SOURCE / 64 )
-          sta .HI
-
-
           lda #3
           sta PARAM2
 
-          lda #<( SCREEN_CHAR + 3 * 80 )
+          lda #<( SCREEN_CHAR + 3 * 80 + 11 * 2 )
           sta ZEROPAGE_POINTER_1
-          lda #>( SCREEN_CHAR + 3 * 80 )
+          lda #>( SCREEN_CHAR + 3 * 80 + 11 * 2 )
           sta ZEROPAGE_POINTER_1 + 1
 
+          ldx #0
+          ldy #0
+          ldz #18
 
 --
-          ldy #2 * 4
-          ldx #0
-
--
-.LO = * + 1
-          lda #$ff
+          lda LOGO_CHARSET_SCREEN,x
+          clc
+          adc #<( LOGO_CHARSET_SOURCE / 64 )
           sta (ZEROPAGE_POINTER_1),y
           iny
-.HI = * + 1
-          lda #$ff
+          lda #>( LOGO_CHARSET_SOURCE / 64 )
+          adc #0
           sta (ZEROPAGE_POINTER_1),y
           iny
 
-          inc .LO
-          bne +
-          inc .HI
-+
+          inx
+          dez
+          bne --
 
-          cpy #2 * 36
-          bne -
-
+          ldy #0
+          ldz #18
           lda ZEROPAGE_POINTER_1
           clc
           adc #80
@@ -66,16 +76,15 @@ Credits
           inc ZEROPAGE_POINTER_1 + 1
 +
 
-          inc PARAM2
-          lda PARAM2
-          cmp #9
+          cpx #144
           bne --
+
 
           ldx #0
           ldy #0
 -
           lda GUI_BAR + 14 * 40,x
-          sta SCREEN_CHAR + 12  * 80,y
+          sta SCREEN_CHAR + 14  * 80,y
 
           lda GUI_BAR + 15 * 40,x
           sta SCREEN_CHAR + 20  * 80,y
@@ -83,6 +92,8 @@ Credits
           sta SCREEN_CHAR + 21  * 80,y
           lda GUI_BAR + 17 * 40,x
           sta SCREEN_CHAR + 22  * 80,y
+          lda GUI_BAR + 18 * 40,x
+          sta SCREEN_CHAR + 23  * 80,y
 
           iny
           iny
@@ -108,6 +119,8 @@ CreditsLoop
 
           lda #0
           sta BUTTON_RELEASED
+
+          jsr SetPalette
 
           jmp TitleSetup
 

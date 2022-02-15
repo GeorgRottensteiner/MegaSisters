@@ -341,11 +341,17 @@ MultiplyBy3
 
 !zone SetupBackground
 SetupBackground
-          lda #<BACKGROUND_1
-          sta .ReadPos
+          lda LEVEL_CONFIG
+          and #$07
+          tay
 
-          lda #>BACKGROUND_1
+          lda LEVEL_BACKGROUND_INDEX_LO,y
+          sta .ReadPos
+          sta .ReadPos2
+
+          lda LEVEL_BACKGROUND_INDEX_HI,y
           sta .ReadPos + 1
+          sta .ReadPos2 + 1
 
           ldy #0
           sty PARAM2
@@ -365,8 +371,13 @@ SetupBackground
           lda $ffff,x
           sta (ZEROPAGE_POINTER_2),y
           inx
-          inx
           iny
+
+.ReadPos2 = * + 1
+          lda $ffff,x
+          sta (ZEROPAGE_POINTER_2),y
+
+          inx
           iny
           cpy #40 * 2
           bne -
@@ -375,8 +386,10 @@ SetupBackground
           clc
           adc #80
           sta .ReadPos
+          sta .ReadPos2
           bcc +
           inc .ReadPos + 1
+          inc .ReadPos2 + 1
 +
           inc PARAM2
           lda PARAM2

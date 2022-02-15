@@ -3,8 +3,9 @@
 !source <c64.asm>
 !source <mega65.asm>
 
-NUM_CHARS = 244
+NUM_CHARS = 248
 NUM_SPRITES = 138
+NUM_BG_CHARS = 16
 
 LOAD_CODE_LOCATION  = $0400
 
@@ -92,6 +93,13 @@ StartUp
 
           lda #$00 ; DMA list exists in BANK 0
           sta DMA.ADDRBANK
+          lda #>DMA_CHARSET_BG ; Set MSB of DMA list address
+          sta DMA.ADDRMSB
+          lda #<DMA_CHARSET_BG ; Set LSB of DMA list address, and execute DMA
+          sta DMA.ADDRLSB_TRIG
+
+          lda #$00 ; DMA list exists in BANK 0
+          sta DMA.ADDRBANK
           lda #>DMA_SPRITES ; Set MSB of DMA list address
           sta DMA.ADDRMSB
           lda #<DMA_SPRITES ; Set LSB of DMA list address, and execute DMA
@@ -111,6 +119,16 @@ DMA_CHARSET
           !byte $00 ; Command high byte
           !word $0000 ; Modulo (ignored due to selected commmand
 
+DMA_CHARSET_BG
+          !byte DMA.COMMAND_COPY  ; Command low byte
+          !word ( BG_CHARSET_END - BG_CHARSET_SOURCE ) ; count
+          !word BG_CHARSET_SOURCE & $ffff
+          !byte BG_CHARSET_SOURCE >> 16        ; Source bank
+          !word BG_CHARSET_LOCATION & $ffff    ;destination address
+          !byte BG_CHARSET_LOCATION >> 16      ;destination mmsb
+          !byte $00 ; Command high byte
+          !word $0000 ; Modulo (ignored due to selected commmand
+
 DMA_SPRITES
           !byte DMA.COMMAND_COPY  ; Command low byte
           !word ( SPRITE_DATA_END - SPRITE_DATA ) ; count
@@ -125,11 +143,16 @@ CHARSET_SOURCE
           !media "../game/game.charsetproject",CHAR,0,NUM_CHARS
 CHARSET_END
 
+BG_CHARSET_SOURCE
+          !media "../game/background.charsetproject",CHAR,0,NUM_BG_CHARS
+BG_CHARSET_END
+
 SPRITE_DATA
           !media "../game/megasisters.spriteproject",SPRITE,0,NUM_SPRITES
 SPRITE_DATA_END
 
 CHARSET_LOCATION = $10000
+BG_CHARSET_LOCATION = $1c000
 
 
 !if 0 {

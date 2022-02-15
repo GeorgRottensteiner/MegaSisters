@@ -12,6 +12,8 @@ Title
           lda #CHAR_EMPTY
           jsr ScreenClear32bitAddr
 
+          lda #0
+          sta LEVEL_CONFIG
           jsr SetupBackground
 
           ;Set logical row width

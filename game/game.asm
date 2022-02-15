@@ -1,7 +1,8 @@
-﻿NUM_LEVEL_ELEMENTS    = 8
+﻿NUM_LEVEL_ELEMENTS    = 9
 NUM_DUST_ENTRIES      = 3
 
-BONUS_STAGE_START = 19
+;first bonus stage
+BONUS_STAGE_START = 28
 
 !ifdef DISK {
 TILE_DATA = $10000
@@ -15,7 +16,7 @@ CHAR_FIRST_BLOCKING   = FCM_CHARSET_FIRST_CHAR + 60
 CHAR_EXIT             = FCM_CHARSET_FIRST_CHAR + 5
 CHAR_LAST_BLOCKING    = FCM_CHARSET_FIRST_CHAR + 192
 
-CHAR_FIRST_DEADLY     = FCM_CHARSET_FIRST_CHAR + 208
+CHAR_FIRST_DEADLY     = FCM_CHARSET_FIRST_CHAR + 194
 
 CHAR_0                = FCM_CHARSET_FIRST_CHAR + 234 + 0
 CHAR_9                = FCM_CHARSET_FIRST_CHAR + 234 + 9
@@ -113,8 +114,6 @@ NextLevel
           lda #CHAR_EMPTY
           jsr ScreenClear32bitAddr
 
-          jsr SetupBackground
-
           ldx #0
           ldy #0
 -
@@ -131,6 +130,8 @@ NextLevel
 
           lda LEVEL_NR
           jsr PrepareLevelDataPointer
+
+          jsr SetupBackground
 
           ;find lowest possible place to stand
           ldy #24
@@ -362,12 +363,29 @@ GameLoop
           cmp #'d'
           lbeq Debug
 
+          cmp #'c'
+          bne +
+
+          ;jump to last proper level
+          lda #BONUS_STAGE_START - 3
+          jmp .Jump
++
+
+          cmp #'s'
+          bne +
+
+          jsr ScrollBy1Pixel
+          jmp GameLoop
+
++
+
           cmp #'b'
           bne +
 
 
-          ;jump to last level
+          ;jump to last level (crystal)
           lda #BONUS_STAGE_START - 2
+.Jump
           sta LEVEL_NR
           lda #1
           sta REACHED_EXIT
@@ -466,7 +484,7 @@ UpdateDust
           clc
           adc #( ROW_SIZE - 2 ) * 2
           tay
-          cpy #80
+          cpy #ROW_SIZE_BYTES
           bcc .Skip3
 
           lda DUST_CHAR_4,x
@@ -475,7 +493,7 @@ UpdateDust
           lda DUST_CHAR_5,x
           iny
           iny
-          cpy #80
+          cpy #ROW_SIZE_BYTES
           bcc .Skip4
           sta (ZEROPAGE_POINTER_2),y
 
@@ -1288,7 +1306,8 @@ AnimateChars
 
           ;water
           lda TILE_ANIMATION_POS
-          and #$03
+          and #$07
+          lsr
           asl
           asl
           asl
@@ -1315,6 +1334,7 @@ AnimateChars
           bne -
 
           lda TILE_ANIMATION_POS
+          lsr
           clc
           adc #2
           and #$03
@@ -1521,6 +1541,8 @@ EnterSecretScreen
           lda LOCAL1
           jsr PrepareLevelDataPointer
 
+          jsr SetupBackground
+
           lda #5
           sta PARAM1
           lda #2
@@ -1554,6 +1576,8 @@ LeaveSecretStage
           lda CURRENT_LEVEL_NR
           sta LEVEL_NR
           jsr PrepareLevelDataPointer
+
+          jsr SetupBackground
 
 -
           jsr HardScroll
@@ -1776,11 +1800,25 @@ BUTTON_RELEASED
 
 
 LEVEL_BACKGROUND_COLOR_INDEX
-          !byte 48    ;46       ;overworld
-          !byte 3      ;underground
-          !byte 3      ;water lands
-          !byte 3      ;castle
-          !byte 3      ;bonus
+          !byte 41     ;overworld
+          !byte 56     ;underground
+          !byte 41     ;water lands
+          !byte 56     ;castle
+          !byte 56     ;bonus
+
+LEVEL_BACKGROUND_INDEX_LO
+          !byte <BACKGROUND_1
+          !byte <BACKGROUND_2
+          !byte <BACKGROUND_3
+          !byte <BACKGROUND_2
+          !byte <BACKGROUND_2
+
+LEVEL_BACKGROUND_INDEX_HI
+          !byte >BACKGROUND_1
+          !byte >BACKGROUND_2
+          !byte >BACKGROUND_3
+          !byte >BACKGROUND_2
+          !byte >BACKGROUND_2
 
 ; 2 = first, 1 = second, 0 = done
 DUST_POS
@@ -1807,19 +1845,19 @@ OUTER_LEVEL_CURRENT_WIDTH
 ;map from level no to bonus map
 LEVEL_BONUS
           !byte 0 ;title
-          !byte BONUS_STAGE_START + 0
-          !byte 0
-          !byte 0
-          !byte 0
           !byte BONUS_STAGE_START + 1
           !byte 0
           !byte 0
           !byte 0
+          !byte BONUS_STAGE_START + 2
           !byte 0
           !byte 0
           !byte 0
-          !byte BONUS_STAGE_START + 2   ;12
           !byte 0
-          !byte BONUS_STAGE_START + 3   ;14
+          !byte 0
+          !byte 0
+          !byte BONUS_STAGE_START + 3   ;12
+          !byte 0
+          !byte BONUS_STAGE_START + 4   ;14
           !byte 0
           !byte 0

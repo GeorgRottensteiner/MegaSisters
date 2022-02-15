@@ -215,13 +215,21 @@ SpawnObjectInSlot
           ldy OBJECT_ACTIVE,x
           lda TYPE_SPAWN_DELTA_X,y
           clc
+          adc #4
+          clc
           adc OBJECT_POS_X,x
           sta OBJECT_POS_X,x
+          bcc +
+          inc OBJECT_POS_X_EX,x
++
 
           lda TYPE_SPAWN_DELTA_Y,y
           clc
           adc OBJECT_POS_Y,x
           sta OBJECT_POS_Y,x
+
+          lda TYPE_SPRITE_WIDTH,y
+          sta OBJECT_WIDTH_CHARS,x
 
           lda TYPE_START_SPRITE_FLAGS,y
           bit #SF_DIR_R
@@ -2191,6 +2199,8 @@ ExplodeObject
 
           ;auto-jump
           lda #10
+          sta JUMP_STEPS_LEFT
+          lda #1
           sta OBJECT_JUMP_POS
           lda #0
           sta OBJECT_FALL_SPEED
@@ -2388,29 +2398,28 @@ IsCharBlocking
           lbne .NotBlocking
 
           ;deadly char hit
-          lda MOVING_DIR
-          jmp Debug
-
           jsr PlayerKilled
           jmp .NotBlocking
 
 .NotDeadly
           cmp #CHAR_LAST_BLOCKING
-          bcs .NotBlocking
+          lbcs .NotBlocking
 
           cmp #CHAR_FIRST_BLOCKING
           lbcs .Blocking
 
           cpx #0
-          bne .NotThePlayer
+          lbne .NotThePlayer
 
           ;check for diamond
           cmp #CHAR_DIAMOND_1
-          bcc .NotBlocking
+          lbcc .NotBlocking
           cmp #CHAR_DIAMOND_1 + 4
-          bcs .NotBlocking
+          lbcs .NotBlocking
 
           ;diamond
+
+          ;y = offset in x (in bytes)
           sty .X_POS
 
           sec
@@ -2443,16 +2452,42 @@ IsCharBlocking
           ;get in game x pos of diamond (RRB x - 41 * 2 ) / 2
           ;jmp Debug
 
-          ;sec
-          ;sbc #41 * 2
+          ;flag if we need to skip left char
+          ldy #0
+          sty PARAM2
+
+          lda .X_POS
           lsr
           sta PARAM1
 
-          ldy #0
+          cmp #$7f
+          bne +
 
-          ldx PARAM1
-          cpx #$7f
-          beq .CutLeftChar
+          ;half diamond is outside
+          lda #1
+          sta PARAM2
+          lda #0
+          sta PARAM1
+
+          jmp ++
+
+;+
+          ;;diamond is fully outside (??) yes, it happens!
+          ;cmp #$7d
+          ;bne +
+
+          ;lda #0
+          ;sta PARAM1
+          ;jmp .DirectSpawn
+
+++
+
++
+          ldy #0
+          ;ldx PARAM1
+          ;cpx #$7f
+          lda PARAM2
+          bne .CutLeftChar
 
           lda #CHAR_EMPTY
           sta (ZEROPAGE_POINTER_2),y
@@ -2466,9 +2501,10 @@ IsCharBlocking
           adc #ROW_SIZE_BYTES - 2
           tay
 
-          ldx PARAM1
-          cpx #$7f
-          beq .CutLeftChar2
+          ;ldx PARAM1
+          ;cpx #$7f
+          lda PARAM2
+          bne .CutLeftChar2
 
           lda #CHAR_EMPTY
           sta (ZEROPAGE_POINTER_2),y
@@ -2478,6 +2514,7 @@ IsCharBlocking
           lda #CHAR_EMPTY
           sta (ZEROPAGE_POINTER_2),y
 
+.DirectSpawn
           ;spawn diamond (and increase bonus counter)
           lda OBJECT_CHAR_POS_Y
           dec
@@ -2678,6 +2715,12 @@ HitStarBlock
           sbc #( ROW_SIZE + 1 ) * 2
           lsr
           sta PARAM1
+          cmp #$7f
+          bcc +
+
+          lda #0
+          sta PARAM1
++
 
           lda OBJECT_CHAR_POS_Y
           dec
@@ -2836,6 +2879,13 @@ HitBrickBlock
           sbc #( ROW_SIZE + 1 ) * 2
           lsr
           sta PARAM1
+          cmp #$7f
+          bcc +
+
+          lda #0
+          sta PARAM1
+
++
 
           lda OBJECT_CHAR_POS_Y
           dec
@@ -2931,6 +2981,9 @@ SpawnExtra
 
 
 !zone HandleObjectFall
+.NUM_CHARS_TO_CHECK
+          !byte 0
+
 HandleObjectFall
           lda #DIR_D
           sta MOVING_DIR
@@ -2955,34 +3008,47 @@ HandleObjectFall
           lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
 
+          ;sprite width
+          lda OBJECT_WIDTH_CHARS,x
+          sta .NUM_CHARS_TO_CHECK
+          lda OBJECT_POS_X_DELTA,x
+          beq +
+          inc .NUM_CHARS_TO_CHECK
++
+
           lda OBJECT_CHAR_POS_X,x
           asl
           tay
+-
           lda (ZEROPAGE_POINTER_1),y
 
           ;1st char
           jsr IsCharBlocking
           bne .Blocked
 
-          ;2nd char
-          iny
-          iny
-          lda (ZEROPAGE_POINTER_1),y
-
-          jsr IsCharBlocking
-          bne .Blocked
-
-          ;3rd char?
-          lda OBJECT_POS_X_DELTA,x
+          dec .NUM_CHARS_TO_CHECK
           beq .CanFall
 
+          ;next char
           iny
           iny
-          lda (ZEROPAGE_POINTER_1),y
-
-          jsr IsCharBlocking
-          beq .CanFall
-
+          jmp -
+;          lda (ZEROPAGE_POINTER_1),y
+;
+;          jsr IsCharBlocking
+;          bne .Blocked
+;
+;          ;3rd char?
+;          lda OBJECT_POS_X_DELTA,x
+;          beq .CanFall
+;
+;          iny
+;          iny
+;          lda (ZEROPAGE_POINTER_1),y
+;
+;          jsr IsCharBlocking
+;          beq .CanFall
+;
 .Blocked
           ;blocked
           lda #0
@@ -3075,6 +3141,9 @@ HandleObjectFall
 
 
 !zone ObjectMoveDownBlocking
+.NUM_CHARS_TO_CHECK
+          !byte 0
+
 ObjectMoveDownBlocking
           lda #DIR_D
           sta MOVING_DIR
@@ -3100,73 +3169,52 @@ ObjectMoveDownBlocking
           rts
 
 .CheckCanMoveDown
-          lda #0
-          sta PARAM2
+          lda OBJECT_CHAR_POS_Y,x
+          clc
+          adc #1
+          and #31
+          tay
 
+          ;in score bar?
+          beq .NotBlocked
+          cpy #1
+          beq .NotBlocked
+          cpy #25
+          beq .NotBlocked
+          bcs .NotBlocked
+
+
+          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
+          sta ZEROPAGE_POINTER_1
+          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
+          sta ZEROPAGE_POINTER_1 + 1
+
+          ;sprite width
+          lda OBJECT_WIDTH_CHARS,x
+          sta .NUM_CHARS_TO_CHECK
           lda OBJECT_POS_X_DELTA,x
-          beq .NoSecondCharCheckNeeded
-
-          lda OBJECT_CHAR_POS_Y,x
-          clc
-          adc #1
-          and #31
-          tay
-
-          ;in score bar?
-          beq .NotBlocked
-          cpy #1
-          beq .NotBlocked
-          cpy #25
-          beq .NotBlocked
-          bcs .NotBlocked
-
-
-          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
-          sta ZEROPAGE_POINTER_1
-          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
-          sta ZEROPAGE_POINTER_1 + 1
-
-          inc PARAM2
-
-          ldy OBJECT_CHAR_POS_X,x
-          iny
-          tya
-          asl
-          tay
-          lda (ZEROPAGE_POINTER_1),y
-
-          jsr IsCharBlocking
-          bne .BlockedDown
-
-.NoSecondCharCheckNeeded
-          inc PARAM2
-
-          lda OBJECT_CHAR_POS_Y,x
-          clc
-          adc #1
-          and #31
-          tay
-
-          ;in score bar?
-          beq .NotBlocked
-          cpy #1
-          beq .NotBlocked
-          cpy #25
-          beq .NotBlocked
-          bcs .NotBlocked
-
-          lda SCREEN_LINE_COLLISION_OFFSET_LO,y
-          sta ZEROPAGE_POINTER_1
-          lda SCREEN_LINE_COLLISION_OFFSET_HI,y
-          sta ZEROPAGE_POINTER_1 + 1
+          beq +
+          inc .NUM_CHARS_TO_CHECK
++
 
           lda OBJECT_CHAR_POS_X,x
           asl
           tay
+-
           lda (ZEROPAGE_POINTER_1),y
 
+          ;1st char
           jsr IsCharBlocking
           bne .BlockedDown
+
+          dec .NUM_CHARS_TO_CHECK
+          beq .NotBlocked
+
+          ;next char
+          iny
+          iny
+          jmp -
+
 
 .NotBlocked
           ;not blocked
@@ -3180,6 +3228,9 @@ ObjectMoveDownBlocking
 
 ;returns 0 if blocked, 1 if moved
 !zone ObjectMoveUpBlocking
+.NUM_CHARS_TO_CHECK
+          !byte 0
+
 ObjectMoveUpBlocking
           lda #DIR_U
           sta MOVING_DIR
@@ -3208,30 +3259,46 @@ ObjectMoveUpBlocking
           lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
 
+          ;chars to test
+          lda OBJECT_WIDTH_CHARS,x
+          sta .NUM_CHARS_TO_CHECK
+          lda OBJECT_POS_X_DELTA,x
+          beq +
+          inc .NUM_CHARS_TO_CHECK
+
++
+
           lda OBJECT_CHAR_POS_X,x
           asl
           tay
-          lda (ZEROPAGE_POINTER_1),y
-
-          jsr IsCharBlocking
-          bne .Blocked
-
-          ;2nd char
-          iny
-          iny
+-
           lda (ZEROPAGE_POINTER_1),y
           jsr IsCharBlocking
           bne .Blocked
 
-          ;3rd char?
-          lda OBJECT_POS_X_DELTA,x
+          dec .NUM_CHARS_TO_CHECK
           beq .CanMove
 
           iny
           iny
-          lda (ZEROPAGE_POINTER_1),y
-          jsr IsCharBlocking
-          beq .CanMove
+          jmp -
+
+          ;;2nd char
+;          iny
+;          iny
+;          lda (ZEROPAGE_POINTER_1),y
+;          jsr IsCharBlocking
+;          bne .Blocked
+;
+;          ;3rd char?
+;          lda OBJECT_POS_X_DELTA,x
+;          beq .CanMove
+;
+;          iny
+;          iny
+;          lda (ZEROPAGE_POINTER_1),y
+;          jsr IsCharBlocking
+;          beq .CanMove
 
 .Blocked
           ;blocked
@@ -3452,10 +3519,12 @@ ObjectMoveRightBlocking
           lda SCREEN_LINE_COLLISION_OFFSET_HI,y
           sta ZEROPAGE_POINTER_1 + 1
 
-          ldy OBJECT_CHAR_POS_X,x
-          iny
-          iny
-          tya
+          lda OBJECT_CHAR_POS_X,x
+          clc
+          adc OBJECT_WIDTH_CHARS,x
+          ;iny
+          ;iny
+          ;tya
           asl
           tay
           lda (ZEROPAGE_POINTER_1),y
@@ -3634,8 +3703,22 @@ SetSpriteValues
           lda BIT_TABLE,x
           tsb SHADOW_VIC_SPRITE_X_EXTEND
 +
+
+          lda OBJECT_CHAR_POS_Y,x
+          bpl .RegularYPos
+
+          ;outside the top, may reappear from bottom, hide below border
+          lda #0
+          jmp +
+
+
+
+.RegularYPos
           lda OBJECT_POS_Y,x
++
           sta VIC.SPRITE_Y_POS,y
+
+
 ++
           inx
           cpx #NUM_OBJECT_SLOTS
@@ -3824,8 +3907,8 @@ TYPE_SPAWN_DELTA_X = * - 1
           !byte 0         ;goomba
           !byte 0         ;player dying
           !byte 0         ;flat
-          !byte 0         ;extra
-          !byte 0         ;diamond
+          !byte 4         ;extra
+          !byte 4         ;diamond
           !byte 4         ;elevator
           !byte 0         ;crab
           !byte 0         ;player shot
@@ -3840,7 +3923,7 @@ TYPE_SPAWN_DELTA_X = * - 1
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
-          !byte 0         ;extra 2
+          !byte 4         ;extra 2
 
 ;offset added onto Y
 TYPE_SPAWN_DELTA_Y = * - 1
@@ -3856,9 +3939,9 @@ TYPE_SPAWN_DELTA_Y = * - 1
           !byte 5         ;deco
           !byte 1         ;bee
           !byte 1         ;fish
-          !byte 1         ;eye
-          !byte 5         ;dragon
-          !byte 5         ;ant
+          !byte 3         ;eye
+          !byte 3         ;dragon
+          !byte 3         ;ant
           !byte 5         ;platform
           !byte 5         ;deadly deco
           !byte 0         ;explosion
@@ -3958,6 +4041,29 @@ TYPE_START_HP = * - 1
           !byte 0         ;crystal
           !byte 0         ;extra 2
 
+TYPE_SPRITE_WIDTH = * - 1
+          !byte 1   ;player
+          !byte 2   ;goomba
+          !byte 1   ;player dying
+          !byte 2   ;flat
+          !byte 2         ;extra
+          !byte 2         ;diamond
+          !byte 2         ;elevator
+          !byte 2         ;crab
+          !byte 1         ;player shot
+          !byte 1         ;deco
+          !byte 1         ;bee
+          !byte 2         ;fish
+          !byte 2         ;eye
+          !byte 9         ;dragon
+          !byte 7         ;ant
+          !byte 2         ;platform
+          !byte 2         ;deadly deco
+          !byte 1         ;explosion
+          !byte 1         ;clown
+          !byte 2         ;crystal
+          !byte 2         ;extra 2
+
 JUMP_TABLE
           !byte 6,6,5,5,4,4,4,4,3,3,3,3,3,3,2,2,2,2,2,2,2,1,1,1,0
 JUMP_TABLE_SIZE = * - JUMP_TABLE
@@ -4021,6 +4127,8 @@ OBJECT_VALUE
           !fill NUM_OBJECT_SLOTS,0
 OBJECT_MAIN_INDEX
           !fill NUM_OBJECT_SLOTS,0
+OBJECT_WIDTH_CHARS
+          !fill NUM_OBJECT_SLOTS,1
 
 JUMP_STEPS_LEFT
           !byte 0

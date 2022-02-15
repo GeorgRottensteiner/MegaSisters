@@ -8,9 +8,7 @@ CHEATS_ENABLED
 BORDER_WIDTH = $58    ;38 column border width
 
 CHARSET_LOCATION      = $10000
-;LOGO_CHARSET_LOCATION = $20000
 
-;SCREEN_CHAR = $0800
 SCREEN_COLOR = $d800
 
 GOTOX             = $10
@@ -22,7 +20,6 @@ TRANSPARENT       = $80
 ;   +1    final right most GOTOX statement
 ;   +1    pseudo char
 ; = 83
-
 ROW_SIZE          = 83
 
 ;we use 16bit characters
@@ -33,7 +30,7 @@ MUSIC_PLAYER = $4000
 NUM_SPRITES = 38
 NUM_CHARS   = 245
 
-CHAR_PALETTE_ENTRY_COUNT = 52
+CHAR_PALETTE_ENTRY_COUNT = 60
 NUM_SPRITE_PALETTES = 8
 
 PARAM1    = $67
@@ -95,6 +92,12 @@ SPRITE_LOCATION = SPRITE_DATA ;$e000
 ENTRY_POINT
 
 ;!ifndef DISK {
+          lda VIC4.NORRDEL_DBLRR_XPOS
+          and #$7f
+          sta VIC4.NORRDEL_DBLRR_XPOS
+
+          ;POKE$D051,PEEK($D051)AND$7F
+
           sei
 
           +EnableVIC4Registers
@@ -138,13 +141,12 @@ ENTRY_POINT
 
           ;Enable double line RRB to double the time for RRB operations
           ;by setting V400 mode, enabling bit 6 in $d051 and setting $d05b Y scale to 0
-          lda #$08
-          tsb VIC3.VICDIS
-          lda #$40
-          tsb VIC4.NORRDEL_DBLRR_XPOS
-          lda #$00
-          sta VIC4.CHRYSCL
-
+          ;lda #$08
+          ;tsb VIC3.VICDIS
+          ;lda #$40
+          ;tsb VIC4.NORRDEL_DBLRR_XPOS
+          ;lda #$00
+          ;sta VIC4.CHRYSCL
 
           lda #0
           sta VIC.BORDER_COLOR
@@ -187,6 +189,10 @@ ENTRY_POINT
           ;enable 16bit sprite pointers (plus upper 7bits of sprite pointer list address)
           lda #$80
           sta VIC4.SPRPTR16
+
+
+          lda #15
+          sta SID2.FILTER_MODE_VOLUME
 
           ;jsr SetPalette
           ;jmp Title
@@ -266,6 +272,10 @@ PALETTE_DATA_SPRITES
 
 BACKGROUND_1
           !media "bg1.charscreen",CHAR
+BACKGROUND_2
+          !media "bg2.charscreen",CHAR
+BACKGROUND_3
+          !media "bg3.charscreen",CHAR
 
 !source "objects.asm"
 
@@ -283,7 +293,14 @@ SPRITE_DATA
 !realign 64
 LOGO_CHARSET_LOCATION
 LOGO_CHARSET_SOURCE
-          !media "../game/logo.charsetproject",CHAR,0,192
+          ;!media "../game/logo.charsetproject",CHAR,0,192
+          !media "logo-new.charscreen",CHARSET,0,76
 LOGO_CHARSET_END
+
+LOGO_CHARSET_SCREEN
+          !media "logo-new.charscreen",CHAR
+
+LOGO_CHARSET_PALETTE
+          !media "logo-new.charscreen",PALETTESWIZZLED
 
 

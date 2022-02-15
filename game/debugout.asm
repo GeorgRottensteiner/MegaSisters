@@ -47,9 +47,9 @@ Debug
           sta PARAM3
           jsr DisplayHex
 
-          lda #<OBJECT_POS_Y
+          lda #<PARAM1
           sta ZEROPAGE_POINTER_1
-          lda #>OBJECT_POS_Y
+          lda #>PARAM1
           sta ZEROPAGE_POINTER_1 + 1
 
           lda #<( SCREEN_CHAR + 40 )
