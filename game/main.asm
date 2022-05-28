@@ -3,7 +3,7 @@
 !source <c64.asm>
 !source <mega65.asm>
 
-CHEATS_ENABLED
+;CHEATS_ENABLED
 
 BORDER_WIDTH = $58    ;38 column border width
 
@@ -150,8 +150,6 @@ ENTRY_POINT
 
           lda #0
           sta VIC.BORDER_COLOR
-
-          lda #0
           jsr MUSIC_PLAYER
 
           jsr InitIrq
@@ -194,8 +192,6 @@ ENTRY_POINT
           lda #15
           sta SID2.FILTER_MODE_VOLUME
 
-          ;jsr SetPalette
-          ;jmp Title
           jmp Credits
 
 
@@ -240,7 +236,7 @@ SetPalette
 !source "title.asm"
 !source "sfxplay.asm"
 !source "getready.asm"
-!source "debugout.asm"
+;!source "debugout.asm"
 !source "util.asm"
 !source "irq.asm"
 !source "completed.asm"
@@ -263,6 +259,20 @@ GUI_BAR
 
 SCREEN_CHAR
           !fill $1036
+
+LEVEL_BACKGROUND_INDEX_LO
+          !byte <BACKGROUND_1
+          !byte <BACKGROUND_2
+          !byte <BACKGROUND_3
+          !byte <BACKGROUND_2
+          !byte <BACKGROUND_2
+
+LEVEL_BACKGROUND_INDEX_HI
+          !byte >BACKGROUND_1
+          !byte >BACKGROUND_2
+          !byte >BACKGROUND_3
+          !byte >BACKGROUND_2
+          !byte >BACKGROUND_2
 
 
 !source "stages.asm"
@@ -303,4 +313,6 @@ LOGO_CHARSET_SCREEN
 LOGO_CHARSET_PALETTE
           !media "logo-new.charscreen",PALETTESWIZZLED
 
-
+!if * > $d000 {
+!error "Code size too big, need to shave off ",* - $d000," bytes!"
+}

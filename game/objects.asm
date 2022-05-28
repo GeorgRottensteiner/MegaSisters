@@ -19,6 +19,9 @@ SPRITE_EXTRA            = SPRITE_BASE + 2 * 3
 SPRITE_DIAMOND          = SPRITE_BASE + 16 * 3
 SPRITE_ELEVATOR_1       = SPRITE_BASE + 27 * 3
 
+SPRITE_EXTRA_TIME       = SPRITE_BASE + 13 * 3
+SPRITE_EXTRA_LIVE       = SPRITE_BASE + 14 * 3
+
 SPRITE_PLAYER_RUN_R_1_EX = SPRITE_BASE + 118 * 3 ;SPRITE_BASE + 17 * 4
 
 SPRITE_CRAB_R           = SPRITE_BASE + 30 * 3
@@ -482,6 +485,10 @@ PlayerKilled
 
           lda #TYPE_PLAYER_DYING
           sta OBJECT_ACTIVE
+
+          ldy #SFX_PLAYER_DIE
+          jsr PlaySoundEffect
+          ldx CURRENT_INDEX
           rts
 
 
@@ -1447,6 +1454,9 @@ BHPlatform
 
 +
 
+          ;safety check, check if player is standing on us before moving
+          jsr .IsPlayerStandingOnUs
+          ldx CURRENT_INDEX
           lda OBJECT_DIR_Y,x
           bne .GoDown
 
@@ -1485,6 +1495,7 @@ BHPlatform
 
 +
 
+.IsPlayerStandingOnUs
           ;player standing on us?
           jsr IsPlayerStandingOnPlatform
           bcc .NotOnPlatform
@@ -1533,6 +1544,11 @@ IsPlayerStandingOnPlatform
           cmp #TYPE_PLAYER
           bne .NoPlayer
 
+          ;don't set on platform if we're jumping
+          lda OBJECT_FLAGS
+          and #OF_JUMPING
+          bne .PlayerNotOnBoard
+
           lda OBJECT_POS_Y
           clc
           adc #21
@@ -1571,7 +1587,7 @@ IsPlayerStandingOnPlatform
           ;X player < platform end
           lda PARAM3
           clc
-          adc #32
+          adc #22 ;32
           sec
           sbc PARAM1
 
@@ -1582,8 +1598,8 @@ IsPlayerStandingOnPlatform
           sec
           rts
 
-.Outside
 .PlayerNotOnBoard
+.Outside
 .NoPlayer
           clc
           rts
@@ -1794,102 +1810,102 @@ BHDiamond
 ;state = 0 - waiting for player
 ;        1 - player on board, moving (up or down)
 BHElevator
-        lda OBJECT_STATE,x
-        beq .WaitingForPlayer
+          lda OBJECT_STATE,x
+          beq .WaitingForPlayer
 
-        lda OBJECT_DIR,x
-        beq .MoveUp
+          lda OBJECT_DIR,x
+          beq .MoveUp
 
-        jsr ObjectMoveDown
-        jsr ObjectMoveDown
+          jsr ObjectMoveDown
+          jsr ObjectMoveDown
 
-        lda OBJECT_POS_Y,x
-        sta OBJECT_POS_Y + 1,x
-        sta OBJECT_POS_Y + 2,x
-        sta OBJECT_POS_Y + 3,x
+          lda OBJECT_POS_Y,x
+          sta OBJECT_POS_Y + 1,x
+          sta OBJECT_POS_Y + 2,x
+          sta OBJECT_POS_Y + 3,x
 
-        ldx #0
-        jsr ObjectMoveDown
-        jsr ObjectMoveDown
-        ldx CURRENT_INDEX
-        rts
+          ldx #0
+          jsr ObjectMoveDown
+          jsr ObjectMoveDown
+          ldx CURRENT_INDEX
+          rts
 
 .MoveUp
-        jsr ObjectMoveUp
-        jsr ObjectMoveUp
+          jsr ObjectMoveUp
+          jsr ObjectMoveUp
 
-        lda OBJECT_POS_Y,x
-        sta OBJECT_POS_Y + 1,x
-        sta OBJECT_POS_Y + 2,x
-        sta OBJECT_POS_Y + 3,x
+          lda OBJECT_POS_Y,x
+          sta OBJECT_POS_Y + 1,x
+          sta OBJECT_POS_Y + 2,x
+          sta OBJECT_POS_Y + 3,x
 
-        ldx #0
-        jsr ObjectMoveUp
-        jsr ObjectMoveUp
-        ldx CURRENT_INDEX
+          ldx #0
+          jsr ObjectMoveUp
+          jsr ObjectMoveUp
+          ldx CURRENT_INDEX
 
-        lda OBJECT_POS_Y,x
-        cmp #20
-        bcc .OutsideTop
+          lda OBJECT_POS_Y,x
+          cmp #20
+          bcc .OutsideTop
 
-        rts
+          rts
 
 .OutsideTop
-        lda SECRET_SCREEN_ACTIVE
-        beq .StageCompleted
+          lda SECRET_SCREEN_ACTIVE
+          beq .StageCompleted
 
-        lda #1
-        sta SECRET_STAGE_LEFT
+          lda #1
+          sta SECRET_STAGE_LEFT
 
-        ldx #7
-        stx CURRENT_INDEX
-        rts
+          ldx #7
+          stx CURRENT_INDEX
+          rts
 
 .StageCompleted
-        lda #1
-        sta REACHED_EXIT
-        rts
+          lda #1
+          sta REACHED_EXIT
+          rts
 
 .WaitingForPlayer
-        lda OBJECT_ACTIVE
-        cmp #TYPE_PLAYER
-        bne .NoPlayer
+          lda OBJECT_ACTIVE
+          cmp #TYPE_PLAYER
+          bne .NoPlayer
 
-        lda OBJECT_POS_Y
-        clc
-        adc #21
-        cmp OBJECT_POS_Y,x
+          lda OBJECT_POS_Y
+          clc
+          adc #21
+          cmp OBJECT_POS_Y,x
 
-        bne .PlayerNotOnBoard
+          bne .PlayerNotOnBoard
 
-        lda OBJECT_CHAR_POS_X,x
-        cmp OBJECT_CHAR_POS_X
-        bcs .OutLeft
+          lda OBJECT_CHAR_POS_X,x
+          cmp OBJECT_CHAR_POS_X
+          bcs .OutLeft
 
-        clc
-        adc #2
-        cmp OBJECT_CHAR_POS_X
-        bcc .OutRight
+          clc
+          adc #2
+          cmp OBJECT_CHAR_POS_X
+          bcc .OutRight
 
-        ;player on board, start moving
-        lda #1
-        sta OBJECT_STATE,x
-        sta PLAYER_ON_ELEVATOR
+          ;player on board, start moving
+          lda #1
+          sta OBJECT_STATE,x
+          sta PLAYER_ON_ELEVATOR
 
-        ;set stand anim
-        ldy OBJECT_DIR
-        lda OBJECT_ANIM_POS,x
-        asl
-        asl
-        clc
-        adc PLAYER_SPRITES,y
-        sta OBJECT_SPRITE
+          ;set stand anim
+          ldy OBJECT_DIR
+          lda OBJECT_ANIM_POS,x
+          asl
+          asl
+          clc
+          adc PLAYER_SPRITES,y
+          sta OBJECT_SPRITE
 
 .OutRight
 .OutLeft
 .PlayerNotOnBoard
 .NoPlayer
-        rts
+          rts
 
 
 
@@ -2232,6 +2248,8 @@ ExplodeObject
 
 .PickExtra
           lda OBJECT_VALUE,x
+          sta PARAM7
+
           inc
           sta PLAYER_POWERED_UP
           cmp #1
@@ -2243,6 +2261,37 @@ ExplodeObject
 
 +
 
+          lda PARAM7
+          cmp #3
+          bne +
+
+          ;clock back to 99
+          lda #CHAR_9
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + GUI_TIME_OFFSET * 2
+          sta SCREEN_CHAR + ROW_SIZE_BYTES + ( GUI_TIME_OFFSET + 1 ) * 2
+          sta TIME_VALUE_BCD
+          sta TIME_VALUE_BCD + 1
+          lda #99
+          sta TIME_VALUE
+
+          jmp ++
++
+          cmp #4
+          bne +
+
+          ;extra live
+          inc PLAYER_LIVES
+
+          ldx #1
+          lda #<( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_LIVES_OFFSET )
+          sta ZEROPAGE_POINTER_5
+          lda #>( SCREEN_CHAR + ROW_SIZE_BYTES + 2 * GUI_LIVES_OFFSET )
+          sta ZEROPAGE_POINTER_5 + 1
+          jsr IncreaseValue
+
+
++
+++
           ldy #SFX_POWER_UP
           jsr PlaySoundEffect
 
@@ -2309,7 +2358,7 @@ FlattenEnemy
 ;a = 1 - blocking
 IsCharBlocking
           cpx #0
-          bne .NotThePlayer2
+          lbne .NotThePlayer2
 
           cmp #CHAR_SECRET_ENTRANCE
           bne .NotASecretEntrance
@@ -2319,6 +2368,35 @@ IsCharBlocking
           jmp .NotBlocking
 
 .NotASecretEntrance
+          cmp #CHAR_WARP
+          bcc .NotWarp
+          cmp #CHAR_WARP + 2 + 1
+          bcs .NotWarp
+
+          ;can only block upwards
+          ldz MOVING_DIR
+          cpz #DIR_U
+          lbne .NotBlocking
+
+          jsr HitWarpBlock
+
+          ;;detect x offset
+;          ;y = x offset in screen buffer (0 is NOT left end)
+;          sty .X_POS
+;-
+;          dey
+;          lda (ZEROPAGE_POINTER_1),y
+;          cmp #CHAR_WARP
+;          beq -
+;
+;          iny
+;          ;actual left side of warp
+
+
+
+          jmp .Blocking
+
+.NotWarp
           cmp #CHAR_BRICK_1
           bcc .NotABrickBlock
           cmp #CHAR_BRICK_3 + 1
@@ -2391,6 +2469,9 @@ IsCharBlocking
 
 .NotExit
 .NotThePlayer2
+          cmp #CHAR_WARP
+          lbeq .NotBlocking
+
           cmp #CHAR_FIRST_DEADLY
           bcc .NotDeadly
 
@@ -2621,6 +2702,97 @@ DIAMOND_OFFSET_RRB
 
 DIAMOND_X_OFFSET
           !byte 0,2,0,2
+
+
+!zone HitWarpBlock
+;x = player index
+;y = offset (x-pos) in screen line
+;ZEROPAGE_POINTER_1 is pointer to screen pos
+;a = hit star block char
+HitWarpBlock
+          phy
+
+          cmp #CHAR_WARP + 1
+          beq .MiddleChar
+          cmp #CHAR_WARP
+          beq .LeftChar
+
+          ;hit right
+          dey
+          dey
+
+.MiddleChar
+          dey
+          dey
+
+.LeftChar
+          lda ZEROPAGE_POINTER_1
+          sec
+          sbc #ROW_SIZE_BYTES
+          sta ZEROPAGE_POINTER_2
+
+          lda ZEROPAGE_POINTER_1 + 1
+          sbc #0
+          sta ZEROPAGE_POINTER_2 + 1
+
+          cpy #00
+          bmi .Skip1
+
+          lda #CHAR_EMPTY_BLOCK_1
+          sta (ZEROPAGE_POINTER_2),y
+.Skip1
+          iny
+          iny
+          bmi .Skip2
+          lda #CHAR_EMPTY_BLOCK_1 + 1
+          sta (ZEROPAGE_POINTER_2),y
+.Skip2
+          iny
+          iny
+          ;remember original char, to check whether its a power up or a diamond
+          lda (ZEROPAGE_POINTER_2),y
+          sta PARAM1
+
+          lda #CHAR_EMPTY_BLOCK_1 + 2
+          sta (ZEROPAGE_POINTER_2),y
+          tya
+          clc
+          adc #( ROW_SIZE - 2 ) * 2
+          tay
+          cpy #ROW_SIZE_BYTES
+          bcc .Skip3
+
+          lda #CHAR_EMPTY_BLOCK_1 + 3
+          sta (ZEROPAGE_POINTER_2),y
+.Skip3
+          iny
+          iny
+          cpy #ROW_SIZE_BYTES
+          bcc .Skip4
+
+          lda #CHAR_EMPTY_BLOCK_1 + 4
+          sta (ZEROPAGE_POINTER_2),y
+.Skip4
+          iny
+          iny
+          lda #CHAR_EMPTY_BLOCK_1 + 5
+          sta (ZEROPAGE_POINTER_2),y
+
+          lda #1
+          sta REACHED_WARP
+          lda #160
+          sta REACHED_WARP_DELAY
+
+
+          ldy #SFX_WARP
+          lda #0
+          jsr PlaySoundEffect
+
+          ply
+          ldx #0
+          rts
+
+
 
 !zone HitStarBlock
 ;x = player index
@@ -2948,12 +3120,12 @@ SpawnExtra
 
           ;player powered up state matches next power up
 
-          ;max out at bouncing shot
+          ;max out at extra life
           lda PLAYER_POWERED_UP
-          cmp #3
+          cmp #5
           bne +
 
-          lda #2
+          lda #4
           sta OBJECT_VALUE,x
           jmp ++
 +
@@ -3059,15 +3231,6 @@ HandleObjectFall
           rts
 
 .CanFall
-;
-;          lda OBJECT_CHAR_POS_Y,x
-;          bmi .CameInFromBottom
-;          lda OBJECT_POS_Y,x
-;          cmp #207
-;          bcc +
-;          rts
-;+
-;.CameInFromBottom
           cpx #0
           bne +
 
@@ -3083,7 +3246,13 @@ HandleObjectFall
           ldx #0
           jmp .Blocked
 
+
 ++
+          lda #OF_ON_PLATFORM
+          trb OBJECT_FLAGS
+          lda #0
+          sta PLAYER_PLATFORM
+
           ldx #0
 +
 
@@ -3943,7 +4112,7 @@ TYPE_SPAWN_DELTA_Y = * - 1
           !byte 3         ;dragon
           !byte 3         ;ant
           !byte 5         ;platform
-          !byte 5         ;deadly deco
+          !byte 3         ;deadly deco (ant/dragon parts)
           !byte 0         ;explosion
           !byte 0         ;clown
           !byte 0         ;crystal
@@ -4163,11 +4332,8 @@ SCREEN_LINE_COLLISION_OFFSET_HI
 ;1 = headbutt
 ;2 = shot
 ;3 = bouncing shot
-;4 = homing shot
-;5 = clock
-;6 = magic bomb
-;7 = water drop
-;8 = lollipop
+;4 = clock
+;5 = extra live
 PLAYER_POWERED_UP
           !byte 0
 
@@ -4175,11 +4341,15 @@ POWER_UP_SPRITE
           !byte <SPRITE_EXTRA
           !byte <SPRITE_EXTRA_FLASH
           !byte <SPRITE_EXTRA_FLASH_DOUBLE
+          !byte <SPRITE_EXTRA_TIME
+          !byte <SPRITE_EXTRA_LIVE
 
 POWER_UP_SPRITE_HI
           !byte >SPRITE_EXTRA
           !byte >SPRITE_EXTRA_FLASH
           !byte >SPRITE_EXTRA_FLASH_DOUBLE
+          !byte >SPRITE_EXTRA_TIME
+          !byte >SPRITE_EXTRA_LIVE
 
 PLAYER_ENTERED_SECRET
           !byte 0

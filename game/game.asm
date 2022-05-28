@@ -2,7 +2,7 @@
 NUM_DUST_ENTRIES      = 3
 
 ;first bonus stage
-BONUS_STAGE_START = 28
+BONUS_STAGE_START = 34
 
 !ifdef DISK {
 TILE_DATA = $10000
@@ -39,6 +39,8 @@ CHAR_SECRET_ENTRANCE  = FCM_CHARSET_FIRST_CHAR + 58
 CHAR_WINDUP_COLUMN    = FCM_CHARSET_FIRST_CHAR + 129
 CHAR_WATER_TOP_1      = FCM_CHARSET_FIRST_CHAR + 192
 CHAR_WATER_TOP_2      = FCM_CHARSET_FIRST_CHAR + 193
+
+CHAR_WARP             = FCM_CHARSET_FIRST_CHAR + 174
 
 SCROLL_FIRST_ROW = 2
 
@@ -82,7 +84,7 @@ Game
 
 
           lda #1
-          ;lda #17
+          ;lda #8
           sta LEVEL_NR
           lda #3
           sta PLAYER_LIVES
@@ -105,6 +107,8 @@ NextLevel
           sta SCROLL_SPEED
           sta SCROLL_SPEED_POS
           sta PLAYER_PLATFORM
+          sta REACHED_WARP
+          sta REACHED_WARP_DELAY
 
           jsr ClearAllObjects
           jsr GetReady
@@ -205,23 +209,8 @@ NextLevel
 
 !zone GameLoop
 GameLoop
-          ;lda #51 + SCROLL_FIRST_ROW * 8
           lda #50 + SCROLL_FIRST_ROW * 8
           jsr WaitFrame
-
-;          ;set up display for game area
-;          lda SCROLL_POS
-;          asl
-;          sta PARAM1
-;
-;          lda #$50 - 8
-;          clc
-;          adc PARAM1
-;          ;$50-scroll(0-15)
-;          sta VIC4.TEXTXPOS
-;
-;          lda #$07
-;          sta VIC4.VIC4DIS
 
           lda PLAYER_IS_DEAD
           ora GAME_FREEZE_DELAY
@@ -274,6 +263,18 @@ GameLoop
           jmp EnterSecretScreen
 
 .NoSecret
+          lda REACHED_WARP
+          beq .NoWarp
+
+          inc REACHED_WARP_DELAY
+          bne .NoWarp
+
+          ;warp complete
+          lda #1
+          sta REACHED_EXIT
+
+.NoWarp
+
           ;setup for top score bar
           ;lda #$07 ;#$01
           ;sta VIC4.VIC4DIS
@@ -360,8 +361,8 @@ GameLoop
           ldx #0
           stx Mega65.PRESSED_KEY
 
-          cmp #'d'
-          lbeq Debug
+          ;cmp #'d'
+          ;lbeq Debug
 
           cmp #'c'
           bne +
@@ -1753,6 +1754,12 @@ TIME_DELAY
 REACHED_EXIT
           !byte 0
 
+REACHED_WARP
+          !byte 0
+
+REACHED_WARP_DELAY
+          !byte 0
+
 SECRET_STAGE_LEFT
           !byte 0
 
@@ -1806,20 +1813,6 @@ LEVEL_BACKGROUND_COLOR_INDEX
           !byte 56     ;castle
           !byte 56     ;bonus
 
-LEVEL_BACKGROUND_INDEX_LO
-          !byte <BACKGROUND_1
-          !byte <BACKGROUND_2
-          !byte <BACKGROUND_3
-          !byte <BACKGROUND_2
-          !byte <BACKGROUND_2
-
-LEVEL_BACKGROUND_INDEX_HI
-          !byte >BACKGROUND_1
-          !byte >BACKGROUND_2
-          !byte >BACKGROUND_3
-          !byte >BACKGROUND_2
-          !byte >BACKGROUND_2
-
 ; 2 = first, 1 = second, 0 = done
 DUST_POS
           !fill NUM_DUST_ENTRIES
@@ -1845,19 +1838,35 @@ OUTER_LEVEL_CURRENT_WIDTH
 ;map from level no to bonus map
 LEVEL_BONUS
           !byte 0 ;title
+          !byte BONUS_STAGE_START
+          !byte 0
+          !byte 0
+          !byte 0
           !byte BONUS_STAGE_START + 1
           !byte 0
           !byte 0
           !byte 0
-          !byte BONUS_STAGE_START + 2
+          !byte 0
+          !byte 0
+          !byte 0
+          !byte BONUS_STAGE_START + 2   ;12
+          !byte 0
+          !byte BONUS_STAGE_START + 3   ;14
+          !byte 0
+          !byte 0
+          !byte BONUS_STAGE_START + 4   ;17
+          !byte 0
+          !byte 0
+          !byte 0
+          !byte 0
+          !byte BONUS_STAGE_START + 5   ;22
+          !byte 0
+          !byte 0
+          !byte BONUS_STAGE_START + 6   ;25
           !byte 0
           !byte 0
           !byte 0
           !byte 0
           !byte 0
           !byte 0
-          !byte BONUS_STAGE_START + 3   ;12
-          !byte 0
-          !byte BONUS_STAGE_START + 4   ;14
-          !byte 0
-          !byte 0
+          !byte BONUS_STAGE_START + 7   ;32

@@ -8,22 +8,6 @@ Credits
           sta VIC4.PALSEL
 
 
-          ;copy palette data (CHAR_PALETTE_ENTRY_COUNT entries),
-          ldx #0
-          ldy #0
--
-
-          lda LOGO_CHARSET_PALETTE, x
-          sta VIC4.PALRED,y
-          lda LOGO_CHARSET_PALETTE + 1 * 256, x
-          sta VIC4.PALGREEN,y
-          lda LOGO_CHARSET_PALETTE + 2 * 256, x
-          sta VIC4.PALBLUE,y
-
-          iny
-          inx
-          bne -
-
           lda #80
           sta VIC4.CHARSTEP_LO
 
@@ -101,13 +85,41 @@ Credits
           cpx #40
           bne -
 
-
           jsr ScreenOn
 
 !zone CreditsLoop
 CreditsLoop
+          lda #140
+          jsr WaitFrame
+
+          ;set palette for credit text
+          jsr SetPalette
+
           lda #252
           jsr WaitFrame
+
+          ;set palette for logo
+          ;copy logo palette data (CHAR_PALETTE_ENTRY_COUNT entries),
+          lda #%01011001
+          sta VIC4.PALSEL
+
+          ldx #0
+          ldy #0
+-
+
+          lda LOGO_CHARSET_PALETTE, x
+          sta VIC4.PALRED,y
+          lda LOGO_CHARSET_PALETTE + 1 * 256, x
+          sta VIC4.PALGREEN,y
+          lda LOGO_CHARSET_PALETTE + 2 * 256, x
+          sta VIC4.PALBLUE,y
+
+          iny
+          inx
+          bne -
+
+          lda #%10011001
+          sta VIC4.PALSEL
 
           lda JOYSTICK_PORT_II
           sta JOY_VALUE

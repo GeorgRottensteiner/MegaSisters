@@ -126,16 +126,6 @@ BonusLoop
           lda #0
           sta BUTTON_RELEASED
 
-          inc STAGE + 1
-          lda STAGE + 1
-          cmp #CHAR_9 + 1
-          bne .Overflow
-
-          lda #CHAR_0
-          sta STAGE + 1
-          inc STAGE
-.Overflow
-
           ;copy score
           ldx #0
           ldy #0
@@ -157,7 +147,29 @@ BonusLoop
           jmp CompletedGame
 
 .NotCompleted
+          ;next stage
+          ldx #1
+
+          ;warp advances 3 stages
+          lda REACHED_WARP
+          beq .Next
+          inx
+          inx
+.Next
+-
           inc LEVEL_NR
+          inc STAGE + 1
+          lda STAGE + 1
+          cmp #CHAR_9 + 1
+          bne .Overflow
+
+          lda #CHAR_0
+          sta STAGE + 1
+          inc STAGE
+.Overflow
+          dex
+          bne -
+
           jmp NextLevel
 
 ++

@@ -328,6 +328,8 @@ SFX_BALL_KILLED   = 4
 SFX_BONUS_BLIP    = 5
 SFX_POWER_UP      = 6
 SFX_FLATTEN_ENEMY = 7
+SFX_PLAYER_DIE    = 8
+SFX_WARP          = 9
 
 SFX_TABLE_LO
           !byte <FX_BOUNCE
@@ -338,6 +340,8 @@ SFX_TABLE_LO
           !byte <FX_BONUS_BLIP
           !byte <FX_POWER_UP
           !byte <FX_JUMP_AT_ENEMY
+          !byte <FX_DIE
+          !byte <FX_WARP
 
 SFX_TABLE_HI
           !byte >FX_BOUNCE
@@ -348,6 +352,8 @@ SFX_TABLE_HI
           !byte >FX_BONUS_BLIP
           !byte >FX_POWER_UP
           !byte >FX_JUMP_AT_ENEMY
+          !byte >FX_DIE
+          !byte >FX_WARP
 
 FX_BOUNCE
           ;!byte ( FX_SLIDE_PING_PONG << 2 ) | FX_WAVE_SAWTOOTH
@@ -391,3 +397,14 @@ FX_POWER_UP
 FX_JUMP_AT_ENEMY
           !byte ( FX_SLIDE << 2 ) | FX_WAVE_NOISE
           !hex 8017d0075f77fc948f
+
+
+;                FX lo/hi, Pulse Lo, Pulse Hi, AD, SR, Effect Delta, Effect Delay, Effect Step
+FX_DIE
+          !byte ( FX_SLIDE << 2 ) | FX_WAVE_SAWTOOTH  ; FX_WAVE_PULSE
+          !hex f811294199b1ff1ac9
+
+FX_WARP
+          !byte ( FX_SLIDE_PING_PONG << 2 ) | FX_WAVE_SAWTOOTH
+          !hex ec455c648cd4022e03
+
