@@ -1,4 +1,4 @@
-﻿NUM_LEVEL_ELEMENTS    = 9
+NUM_LEVEL_ELEMENTS    = 9
 NUM_DUST_ENTRIES      = 3
 
 ;first bonus stage

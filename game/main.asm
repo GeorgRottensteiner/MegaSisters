@@ -1,4 +1,4 @@
-﻿!cpu m65
+!cpu m65
 
 !source <c64.asm>
 !source <mega65.asm>
@@ -131,6 +131,10 @@ ENTRY_POINT
           ;force PAL mode
           lda #$80
           trb VIC4.PALNTSC_VGAHDTV_RASLINE0
+
+          ;clear any stored key
+          ldx #0
+          stx Mega65.PRESSED_KEY
 
           ;lda #$80
           ;trb VIC4.NORRDEL_DBLRR_XPOS
