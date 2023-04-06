@@ -166,6 +166,10 @@ ENTRY_POINT
           lda #$07
           sta VIC4.VIC4DIS
 
+          ;disable potentially enabled double v sprite resolution
+          lda #0
+          sta VIC4.SPRENV400
+
           lda #$08
           sta VIC.CONTROL_2
 
