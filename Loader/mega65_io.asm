@@ -1,4 +1,4 @@
-﻿;* = * "Floppy IO code"
+;* = * "Floppy IO code"
 
 !cpu m65
 
@@ -30,75 +30,75 @@ FILE_BUFFER         = $0200
 !end
 
 
-!ifdef INCLUDE_SD {
+;!ifdef INCLUDE_SD {
 
-!macro SD_LOAD_CHIPRAM addr, fname
-          bra +
+;!macro SD_LOAD_CHIPRAM addr, fname
+;          bra +
 
-.FileName
-          !text fname
-          !byte $00
+;.FileName
+;          !text fname
+;          !byte $00
 
-+
-          lda #>.FileName
-          ldx #<.FileName
-          jsr SDIO.CopyFileName
+;+
+;          lda #>.FileName
+;          ldx #<.FileName
+;          jsr SDIO.CopyFileName
 
-          ldx #<addr
-          ldy #>addr
-          ldz #( addr & $ff0000 ) >> 16
+;          ldx #<addr
+;          ldy #>addr
+;          ldz #( addr & $ff0000 ) >> 16
 
-          lda #HVC_SD_TO_CHIPRAM
-          sta Mega65.HTRAP00
-          eom
-!end
-
-
-
-!macro SD_LOAD_ATTICRAM addr, fname
-          bra +
-
-.FileName
-          !text fname
-          !byte $00
-
-+
-          lda #>.FileName
-          ldx #<.FileName
-          jsr SDIO.CopyFileName
-
-          ldx #<addr
-          ldy #>addr
-          ldz #( addr & $ff0000 ) >> 16
-
-          lda #HVC_SD_TO_ATTICRAM
-          sta Mega65.HTRAP00
-          eom
-!end
+;          lda #HVC_SD_TO_CHIPRAM
+;          sta Mega65.HTRAP00
+;          eom
+;!end
 
 
-!zone SDIO
-CopyFileName
-          sta .FileName + 1
-          stx .FileName + 0
 
-          ldx #$00
--
+;!macro SD_LOAD_ATTICRAM addr, fname
+;          bra +
 
-.FileName = * + 1
-          lda $BEEF, x
-          sta SDFILENAME, x
-          inx
-          bne -
+;.FileName
+;          !text fname
+;          !byte $00
 
-          ;Make hypervisor call to set filename to load
-          ldx #<SDFILENAME
-          ldy #>SDFILENAME
-          lda #$2e
-          sta Mega65.HTRAP00
-          eom
-          rts
-}
+;+
+;          lda #>.FileName
+;          ldx #<.FileName
+;          jsr SDIO.CopyFileName
+
+;          ldx #<addr
+;          ldy #>addr
+;          ldz #( addr & $ff0000 ) >> 16
+
+;          lda #HVC_SD_TO_ATTICRAM
+;          sta Mega65.HTRAP00
+;          eom
+;!end
+
+
+;!zone SDIO
+;CopyFileName
+;          sta .FileName + 1
+;          stx .FileName + 0
+
+;          ldx #$00
+;-
+
+;.FileName = * + 1
+;          lda $BEEF, x
+;          sta SDFILENAME, x
+;          inx
+;          bne -
+
+;          ;Make hypervisor call to set filename to load
+;          ldx #<SDFILENAME
+;          ldy #>SDFILENAME
+;          lda #$2e
+;          sta Mega65.HTRAP00
+;          eom
+;          rts
+;}
 
 
 !zone FLOPPYIO

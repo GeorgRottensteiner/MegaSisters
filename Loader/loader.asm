@@ -1,4 +1,4 @@
-﻿!cpu m65
+!cpu m65
 
 !source <c64.asm>
 !source <mega65.asm>
